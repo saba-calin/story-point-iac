@@ -1,5 +1,9 @@
 {
   "acknowledged-issue-numbers": [
     34892
-  ]
+  ],
+  "hosted-zone:account=654512229767:domainName=story-point.xyz:region=us-east-1": {
+    "Id": "/hostedzone/Z05309392OY22OGIP5FHP",
+    "Name": "story-point.xyz."
+  }
 }

@@ -38,3 +38,8 @@ jobs:
         run: |
           cdk synth HostedZoneStack
           cdk deploy --require-approval never HostedZoneStack
+
+      - name: Deploy Frontend Stack
+        run: |
+          cdk synth FrontendStack
+          cdk deploy --require-approval never FrontendStack

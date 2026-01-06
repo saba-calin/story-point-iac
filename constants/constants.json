@@ -1,4 +1,6 @@
 {
   "root_domain_name": "story-point.xyz",
+  "www_domain_name": "www.story-point.xyz",
+  "api_domain_name": "api.story-point.xyz",
   "root_certificate_arn_parameter": "root_certificate_arn_parameter"
 }

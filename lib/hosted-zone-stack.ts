@@ -10,16 +10,25 @@ export class HostedZoneStack extends cdk.Stack {
 
     super(scope, id, props);
 
-    const hostedZone = new route53.PublicHostedZone(this, 'HostedZone', {
-      zoneName: constants.root_domain_name
+    // The ns records must be manually updated from the registrar
+    // const hostedZone = new route53.PublicHostedZone(this, 'HostedZone', {
+    //   zoneName: constants.root_domain_name
+    // });
+    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: constants.root_domain_name,
     });
 
     const rootCertificate = new acm.Certificate(this, 'RootCertificate', {
       domainName: constants.root_domain_name,
+      subjectAlternativeNames:[
+        constants.www_domain_name,
+        constants.api_domain_name
+      ],
       allowExport: false,
       validation: acm.CertificateValidation.fromDns(hostedZone),
       keyAlgorithm: acm.KeyAlgorithm.RSA_2048
     });
+
     new ssm.StringParameter(this, 'RootCertificateArnParameter', {
       parameterName: constants.root_certificate_arn_parameter,
       stringValue: rootCertificate.certificateArn

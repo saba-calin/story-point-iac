@@ -43,3 +43,8 @@ jobs:
         run: |
           cdk synth FrontendStack
           cdk deploy --require-approval never FrontendStack
+
+      - name: Deploy Dynamo Stack
+        run: |
+          cdk synth DynamoStack
+          cdk deploy --require-approval never DynamoStack

@@ -5,6 +5,7 @@ import {FrontendStack} from "../lib/frontend-stack";
 import * as fs from 'fs';
 import * as path from 'path';
 import {Constants} from "../constants/constants";
+import {DynamoStack} from "../lib/dynamo-stack";
 
 const app = new cdk.App();
 const env = {
@@ -21,5 +22,10 @@ new HostedZoneStack(app, 'HostedZoneStack', constants, {
 
 new FrontendStack(app, 'FrontendStack', constants, {
   env: env,
-  description: 'Stack used to create buckets and cloudfront distributions for the frontend'
+  description: 'Stack used to create the buckets and cloudfront distributions for the frontend'
+});
+
+new DynamoStack(app, 'DynamoStack', constants, {
+  env: env,
+  description: 'Stack used to create the DynamoDB tables'
 });

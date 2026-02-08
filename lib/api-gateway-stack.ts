@@ -41,8 +41,8 @@ export class ApiGatewayStack extends cdk.Stack {
       }
     });
 
-    const logGroup = new LogGroup(this, 'LogGroup', {
-      logGroupName: 'aws/apigateway/story-point',
+    const logGroup = new LogGroup(this, 'StoryPointApiLogGroup', {
+      logGroupName: '/aws/apigateway/story-point',
       retention: RetentionDays.THREE_MONTHS,
       removalPolicy: RemovalPolicy.DESTROY
     });

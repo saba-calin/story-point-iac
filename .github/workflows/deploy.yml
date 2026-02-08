@@ -28,7 +28,7 @@ jobs:
           npm install
           cd ..
 
-      - name: Build Lambda function
+      - name: Build Lambda functions
         run: |
           cd lambda
           npm run build-all

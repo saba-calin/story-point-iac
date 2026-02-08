@@ -1,7 +1,7 @@
 {
   "name": "sign-up",
   "version": "0.1.0",
-  "description": "Lambda that handles the sign-up of the users",
+  "description": "Lambda function that handles the sign-up of the users",
   "main": "index.ts",
   "scripts": {
     "build": "rm -rf dist && esbuild ./ --entry-names=[dir]/[name]/index --external:pg-native --bundle --minify --platform=node --target=node24.0.0 --outdir=dist"

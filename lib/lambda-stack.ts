@@ -10,7 +10,7 @@ export class LambdaStack extends cdk.Stack {
 
     const signUpLambda = new lambda.Function(this, 'SignUpLambda', {
       functionName: 'sign-up_lambda',
-      description: 'Function that handles the sign-up of the users',
+      description: 'Lambda function that handles the sign-up of the users',
       architecture: lambda.Architecture.ARM_64,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',

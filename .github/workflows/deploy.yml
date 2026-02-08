@@ -26,6 +26,7 @@ jobs:
           npm install
           cd lambda
           npm install
+          cd ..
 
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk

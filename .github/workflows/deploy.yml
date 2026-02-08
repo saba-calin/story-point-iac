@@ -19,10 +19,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '24'
+          node-version: '22'
 
       - name: Install dependencies
-        run: npm install
+        run: | 
+          npm install
+          cd /lambda
+          npm install
 
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
@@ -48,3 +51,10 @@ jobs:
         run: |
           cdk synth DynamoStack
           cdk deploy --require-approval never DynamoStack
+
+      - name: Deploy Lambda Stack
+        run: |
+          cd lambda/
+          npm run build-all
+          cdk synth LambdaStack
+          cdk deploy --require-approval never LambdaStack

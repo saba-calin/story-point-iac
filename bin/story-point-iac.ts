@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {Constants} from "../constants/constants";
 import {DynamoStack} from "../lib/dynamo-stack";
+import {LambdaStack} from "../lib/lambda-stack";
 
 const app = new cdk.App();
 const env = {
@@ -28,4 +29,9 @@ new FrontendStack(app, 'FrontendStack', constants, {
 new DynamoStack(app, 'DynamoStack', constants, {
   env: env,
   description: 'Stack used to create the DynamoDB tables'
+});
+
+new LambdaStack(app, 'LambdaStack', constants, {
+  env: env,
+  description: 'Stack used to create all Lambda functions'
 });

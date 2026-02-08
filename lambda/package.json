@@ -1,0 +1,17 @@
+{
+  "name": "monorepo-lambda",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo for all AWS Lambda functions",
+  "workspaces": [
+    "sign-up"
+  ],
+  "devDependencies": {
+    "esbuild": "^0.27.3",
+    "typescript": "~5.6.3"
+  },
+  "scripts": {
+    "audit-all": "npm audit all --workspaces --if-present",
+    "build-all": "npm run build --workspaces --if-present"
+  }
+}

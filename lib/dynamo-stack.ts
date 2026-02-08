@@ -10,13 +10,8 @@ export class DynamoStack extends cdk.Stack {
 
     const usersTable = new dynamodb.TableV2(this, 'UsersTable', {
       tableName: 'Users',
-      partitionKey: {name: 'uuid', type: dynamodb.AttributeType.STRING},
-      removalPolicy: cdk.RemovalPolicy.DESTROY
-    });
-    usersTable.addGlobalSecondaryIndex({
-      indexName: 'UsernameIndex',
       partitionKey: {name: 'username', type: dynamodb.AttributeType.STRING},
-      projectionType: dynamodb.ProjectionType.ALL
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
     usersTable.addGlobalSecondaryIndex({
       indexName: 'EmailIndex',

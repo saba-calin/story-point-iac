@@ -1,6 +1,8 @@
 import * as cdk from "aws-cdk-lib/core";
 import {Duration, RemovalPolicy} from "aws-cdk-lib/core";
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as apigwv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
@@ -77,6 +79,13 @@ export class ApiGatewayStack extends cdk.Stack {
       api: httpApi,
       domainName: customDomainName,
       stage: httpApiStage
+    });
+
+    const lambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('SignUpLambdaIntegration', lambda.Function.fromFunctionName(this, 'SignUpLambda', 'sign-up_lambda'));
+    httpApi.addRoutes({
+      path: '/sign-up',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: lambdaIntegration
     });
   }
 }

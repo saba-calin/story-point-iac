@@ -4,5 +4,6 @@
   "api_domain_name": "api.story-point.xyz",
   "root_certificate_arn_parameter": "root_certificate_arn_parameter",
   "localhost_url": "http://localhost:5173",
-  "root_url": "https://story-point.xyz"
+  "root_url": "https://story-point.xyz",
+  "lambda_memory_size": 2048
 }

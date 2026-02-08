@@ -7,6 +7,7 @@ import * as path from 'path';
 import {Constants} from "../constants/constants";
 import {DynamoStack} from "../lib/dynamo-stack";
 import {LambdaStack} from "../lib/lambda-stack";
+import {ApiGatewayStack} from "../lib/api-gateway-stack";
 
 const app = new cdk.App();
 const env = {
@@ -16,9 +17,9 @@ const env = {
 const constantsFile = JSON.parse(fs.readFileSync(path.join(__dirname, '../constants/constants.json'), 'utf-8'));
 const constants = new Constants(constantsFile);
 
-new HostedZoneStack(app, 'HostedZoneStack', constants, {
+const hostedZoneStack = new HostedZoneStack(app, 'HostedZoneStack', constants, {
   env: env,
-  description: 'Stack used to create the hosted zone and required acm certificates'
+  description: 'Stack used to create the hosted zone, acm certificates and custom domain names for API Gateway'
 });
 
 new FrontendStack(app, 'FrontendStack', constants, {
@@ -34,4 +35,9 @@ new DynamoStack(app, 'DynamoStack', constants, {
 new LambdaStack(app, 'LambdaStack', constants, {
   env: env,
   description: 'Stack used to create all Lambda functions'
+});
+
+new ApiGatewayStack(app, 'ApiGatewayStack', constants, hostedZoneStack.customDomainName, {
+  env: env,
+  description: 'Stack used to create the API Gateway'
 });

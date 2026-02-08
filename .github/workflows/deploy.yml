@@ -63,3 +63,8 @@ jobs:
         run: |
           cdk synth LambdaStack
           cdk deploy --require-approval never LambdaStack
+
+      - name: Deploy API Gateway Stack
+        run: |
+          cdk synth ApiGatewayStack
+          cdk deploy --require-approval never ApiGatewayStack

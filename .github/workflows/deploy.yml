@@ -28,6 +28,12 @@ jobs:
           npm install
           cd ..
 
+      - name: Build Lambda function
+        run: |
+          cd lambda
+          npm run build-all
+          cd ..
+
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
 
@@ -55,8 +61,5 @@ jobs:
 
       - name: Deploy Lambda Stack
         run: |
-          cd lambda
-          npm run build-all
-          cd ..
           cdk synth LambdaStack
           cdk deploy --require-approval never LambdaStack

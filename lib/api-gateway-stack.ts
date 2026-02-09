@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib/core";
 import {Duration, RemovalPolicy} from "aws-cdk-lib/core";
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as apigwv2Authorizers from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
@@ -92,7 +93,22 @@ export class ApiGatewayStack extends cdk.Stack {
     httpApi.addRoutes({
       path: '/log-in',
       methods: [apigwv2.HttpMethod.POST],
-      integration: logInLambdaIntegration
+      integration: logInLambdaIntegration,
     });
+
+    const authorizerLambda = lambda.Function.fromFunctionName(this, 'AuthorizerLambda', 'authorizer_lambda');
+    const authorizer = new apigwv2Authorizers.HttpLambdaAuthorizer('LambdaAuthorizer', authorizerLambda, {
+      authorizerName: 'StoryPointLambdaAuthorizer',
+      responseTypes: [apigwv2Authorizers.HttpLambdaResponseType.SIMPLE],
+      resultsCacheTtl: Duration.seconds(0),
+      identitySource: []
+    });
+    const testLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('TestLambdaIntegration', lambda.Function.fromFunctionName(this, 'TestLambda', 'test_lambda'));
+    httpApi.addRoutes({
+      path: '/test',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: testLambdaIntegration,
+      authorizer: authorizer
+    })
   }
 }

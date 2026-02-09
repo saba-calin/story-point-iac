@@ -5,7 +5,9 @@
   "description": "Monorepo for all AWS Lambda functions",
   "workspaces": [
     "sign-up",
-    "log-in"
+    "log-in",
+    "authorizer",
+    "test"
   ],
   "devDependencies": {
     "esbuild": "^0.27.3",

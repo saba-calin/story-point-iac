@@ -24,8 +24,49 @@ export class LambdaStack extends cdk.Stack {
     const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
     const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
-    this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
+    this.deployTestLambda(constants);
+    this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
+    this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
+  }
+
+  private deployTestLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('test');
+
+    new lambda.Function(this, 'TestLambda', {
+      functionName: 'test_lambda',
+      description: 'Lambda function to test a protected endpoint',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/test/dist/test'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup
+    });
+  }
+
+  private deployAuthorizerLambda(
+    constants: Constants,
+    jwtSecretArn: string,
+    jwtSecret: ISecret
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('authorizer');
+
+    const authorizerLambda = new lambda.Function(this, 'AuthorizerLambda', {
+      functionName: 'authorizer_lambda',
+      description: 'Lambda function that handles the authorization of the protected endpoints',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/authorizer/dist/authorizer'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        JWT_SECRET_ARN: jwtSecretArn,
+      }
+    });
+
+    jwtSecret.grantRead(authorizerLambda);
   }
 
   private deployLogInLambda(

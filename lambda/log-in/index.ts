@@ -32,7 +32,6 @@ export async function handler(event: any) {
         Key: {username: logInRequest.username}
       })
     );
-    console.log("RESULT: ", result.Item);
     if (!result.Item) {
       return generateErrorResponse(400, "Invalid credentials");
     }
@@ -44,7 +43,7 @@ export async function handler(event: any) {
       return generateErrorResponse(400, "Invalid credentials");
     }
 
-    const jwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
+    cachedJwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
     const expirationTime = 60 * 60 * 24 * JWT_EXPIRY_DAYS;
 
     const jwtToken = jwt.sign(
@@ -54,7 +53,7 @@ export async function handler(event: any) {
         firstName: user.firstName,
         lastName: user.lastName
       },
-      jwtSecret,
+      cachedJwtSecret,
       {
         expiresIn: expirationTime
       }
@@ -80,7 +79,7 @@ export async function handler(event: any) {
     };
 
   } catch (error: any) {
-    console.log(error);
+    console.error(error);
     return generateErrorResponse(500, "Internal server error");
   }
 }

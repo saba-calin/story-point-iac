@@ -35,7 +35,7 @@ export async function handler(event: any) {
       return generateErrorResponse(400, "Password must be at least 8 characters");
     }
 
-    const jwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
+    cachedJwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
 
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(signUpRequest.password, saltRounds);
@@ -81,7 +81,7 @@ export async function handler(event: any) {
         firstName: userRecord.firstName,
         lastName: userRecord.lastName
       },
-      jwtSecret,
+      cachedJwtSecret,
       {
         expiresIn: expirationTime
       }

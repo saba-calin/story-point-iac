@@ -12,6 +12,23 @@ export function generateErrorResponse(statusCode: number, message: string) {
   };
 }
 
+export function getCookieValue(cookieHeader: string, name: string) {
+  if (!cookieHeader) {
+    return null;
+  }
+
+  const cookies = cookieHeader.split(";");
+
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split("=");
+    if (key === name) {
+      return rest.join("=");
+    }
+  }
+
+  return null;
+}
+
 export async function getJwtSecret(
   cachedJwtSecret: string | null,
   jwtSecretArn: string,

@@ -3,7 +3,9 @@
   "www_domain_name": "www.story-point.xyz",
   "api_domain_name": "api.story-point.xyz",
   "root_certificate_arn_parameter": "root_certificate_arn_parameter",
+  "jwt_secret_arn_parameter": "jwt_secret_arn_parameter",
   "localhost_url": "http://localhost:5173",
   "root_url": "https://story-point.xyz",
-  "lambda_memory_size": 3008
+  "lambda_memory_size": 3008,
+  "jwt_expiry_days": 1
 }

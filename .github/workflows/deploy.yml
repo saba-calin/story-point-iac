@@ -49,6 +49,11 @@ jobs:
           cdk synth HostedZoneStack
           cdk deploy --require-approval never HostedZoneStack
 
+      - name: Deploy Secrets Stack
+        run: |
+          cdk synth SecretsStack
+          cdk deploy --require-approval never SecretsStack
+
       - name: Deploy Frontend Stack
         run: |
           cdk synth FrontendStack

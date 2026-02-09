@@ -2,6 +2,8 @@ import * as cdk from "aws-cdk-lib/core";
 import {RemovalPolicy} from "aws-cdk-lib/core";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
@@ -24,9 +26,12 @@ export class LambdaStack extends cdk.Stack {
   private deploySignUpLambda(
     constants: Constants,
     usersTable: dynamodb.TableV2,
-    userEmailsTable: dynamodb.TableV2
+    userEmailsTable: dynamodb.TableV2,
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('sign-up');
+
+    const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
+    const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     const signUpLambda = new lambda.Function(this, 'SignUpLambda', {
       functionName: 'sign-up_lambda',
@@ -37,8 +42,15 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/sign-up/dist/sign-up'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        USER_EMAILS_TABLE: userEmailsTable.tableName,
+        JWT_SECRET_ARN: jwtSecretArn,
+        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days)
+      }
     });
 
+    jwtSecret.grantRead(signUpLambda);
     usersTable.grantReadWriteData(signUpLambda);
     userEmailsTable.grantReadWriteData(signUpLambda);
   }

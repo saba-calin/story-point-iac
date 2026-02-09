@@ -8,6 +8,7 @@ import {Constants} from "../constants/constants";
 import {DynamoStack} from "../lib/dynamo-stack";
 import {LambdaStack} from "../lib/lambda-stack";
 import {ApiGatewayStack} from "../lib/api-gateway-stack";
+import {SecretsStack} from "../lib/secrets-stack";
 
 const app = new cdk.App();
 const env = {
@@ -20,6 +21,11 @@ const constants = new Constants(constantsFile);
 const hostedZoneStack = new HostedZoneStack(app, 'HostedZoneStack', constants, {
   env: env,
   description: 'Stack used to create the hosted zone, acm certificates and custom domain names for API Gateway'
+});
+
+new SecretsStack(app, 'SecretsStack', constants, {
+  env: env,
+  description: 'Stack used to create the secret keys use by the the application'
 });
 
 new FrontendStack(app, 'FrontendStack', constants, {

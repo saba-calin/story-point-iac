@@ -7,6 +7,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
+import {ISecret} from "aws-cdk-lib/aws-secretsmanager";
 
 export class LambdaStack extends cdk.Stack {
   constructor(
@@ -20,18 +21,20 @@ export class LambdaStack extends cdk.Stack {
 
     super(scope, id, props);
 
-    this.deploySignUpLambda(constants, usersTable, userEmailsTable);
-    this.deployLogInLambda(constants, usersTable);
+    const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
+    const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
+
+    this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
+    this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
   }
 
   private deployLogInLambda(
     constants: Constants,
     usersTable: dynamodb.TableV2,
+    jwtSecretArn: string,
+    jwtSecret: ISecret
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('log-in');
-
-    const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
-    const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     const logInLambda = new lambda.Function(this, 'LogInLambda', {
       functionName: 'log-in_lambda',
@@ -57,11 +60,10 @@ export class LambdaStack extends cdk.Stack {
     constants: Constants,
     usersTable: dynamodb.TableV2,
     userEmailsTable: dynamodb.TableV2,
+    jwtSecretArn: string,
+    jwtSecret: ISecret
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('sign-up');
-
-    const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
-    const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     const signUpLambda = new lambda.Function(this, 'SignUpLambda', {
       functionName: 'sign-up_lambda',

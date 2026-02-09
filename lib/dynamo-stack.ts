@@ -4,19 +4,22 @@ import {Constants} from "../constants/constants";
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 export class DynamoStack extends cdk.Stack {
+  public readonly usersTable: dynamodb.TableV2;
+  public readonly userEmailsTable: dynamodb.TableV2;
+
   constructor(scope: Construct, id: string, constants: Constants, props?: cdk.StackProps) {
 
     super(scope, id, props);
 
-    const usersTable = new dynamodb.TableV2(this, 'UsersTable', {
+    this.usersTable = new dynamodb.TableV2(this, 'UsersTable', {
       tableName: 'Users',
       partitionKey: {name: 'username', type: dynamodb.AttributeType.STRING},
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
-    usersTable.addGlobalSecondaryIndex({
-      indexName: 'EmailIndex',
+    this.userEmailsTable = new dynamodb.TableV2(this, 'UserEmailsTable', {
+      tableName: 'UserEmails',
       partitionKey: {name: 'email', type: dynamodb.AttributeType.STRING},
-      projectionType: dynamodb.ProjectionType.ALL
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
   }
 }

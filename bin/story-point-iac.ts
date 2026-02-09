@@ -27,12 +27,12 @@ new FrontendStack(app, 'FrontendStack', constants, {
   description: 'Stack used to create the buckets and cloudfront distributions for the frontend'
 });
 
-new DynamoStack(app, 'DynamoStack', constants, {
+const dynamoStack = new DynamoStack(app, 'DynamoStack', constants, {
   env: env,
   description: 'Stack used to create the DynamoDB tables'
 });
 
-new LambdaStack(app, 'LambdaStack', constants, {
+new LambdaStack(app, 'LambdaStack', constants, dynamoStack.usersTable, {
   env: env,
   description: 'Stack used to create all Lambda functions'
 });

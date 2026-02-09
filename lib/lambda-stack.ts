@@ -7,14 +7,25 @@ import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
 
 export class LambdaStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, constants: Constants, props?: cdk.StackProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    userEmailsTable: dynamodb.TableV2,
+    props?: cdk.StackProps
+  ) {
 
     super(scope, id, props);
 
-    this.deploySignUpLambda(constants);
+    this.deploySignUpLambda(constants, usersTable, userEmailsTable);
   }
 
-  private deploySignUpLambda(constants: Constants) {
+  private deploySignUpLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    userEmailsTable: dynamodb.TableV2
+  ) {
     const logGroup = this.createLambdaFunctionLogGroup('sign-up');
 
     const signUpLambda = new lambda.Function(this, 'SignUpLambda', {
@@ -28,8 +39,8 @@ export class LambdaStack extends cdk.Stack {
       logGroup: logGroup,
     });
 
-    const table = dynamodb.TableV2.fromTableName(this, 'ImportedUsersTable', 'Users');
-    table.grantReadWriteData(signUpLambda);
+    usersTable.grantReadWriteData(signUpLambda);
+    userEmailsTable.grantReadWriteData(signUpLambda);
   }
 
   private createLambdaFunctionLogGroup(lambdaName: string) {

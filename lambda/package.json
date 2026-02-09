@@ -4,7 +4,8 @@
   "private": true,
   "description": "Monorepo for all AWS Lambda functions",
   "workspaces": [
-    "sign-up"
+    "sign-up",
+    "log-in"
   ],
   "devDependencies": {
     "esbuild": "^0.27.3",

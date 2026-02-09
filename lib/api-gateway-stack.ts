@@ -87,5 +87,12 @@ export class ApiGatewayStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: lambdaIntegration
     });
+
+    const logInLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('LogInLambdaIntegration', lambda.Function.fromFunctionName(this, 'LogInLambda', 'log-in_lambda'));
+    httpApi.addRoutes({
+      path: '/log-in',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: logInLambdaIntegration
+    });
   }
 }

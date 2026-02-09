@@ -21,6 +21,36 @@ export class LambdaStack extends cdk.Stack {
     super(scope, id, props);
 
     this.deploySignUpLambda(constants, usersTable, userEmailsTable);
+    this.deployLogInLambda(constants, usersTable);
+  }
+
+  private deployLogInLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('log-in');
+
+    const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
+    const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
+
+    const logInLambda = new lambda.Function(this, 'LogInLambda', {
+      functionName: 'log-in_lambda',
+      description: 'Lambda function that handles the log-in of the users',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/log-in/dist/log-in'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        JWT_SECRET_ARN: jwtSecretArn,
+        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days)
+      }
+    });
+
+    jwtSecret.grantRead(logInLambda);
+    usersTable.grantReadData(logInLambda);
   }
 
   private deploySignUpLambda(

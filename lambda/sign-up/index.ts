@@ -1,7 +1,7 @@
 import {SignUpRequest} from "./util/SignUpRequest";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
-import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
+import {DynamoDBDocumentClient, TransactWriteCommand} from "@aws-sdk/lib-dynamodb";
+import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import {generateErrorResponse, getJwtSecret} from "../util";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
@@ -20,19 +20,19 @@ let cachedJwtSecret: string | null = null;
 export async function handler(event: any) {
   try {
     const signUpRequest: SignUpRequest = JSON.parse(event.body);
-    console.log(signUpRequest);
+    console.log("Sign-up request: ", signUpRequest);
 
     if (!signUpRequest.firstName || !signUpRequest.lastName || !signUpRequest.username || !signUpRequest.email || !signUpRequest.password) {
-      return generateErrorResponse(400, 'Missing required fields');
+      return generateErrorResponse(400, "Missing required fields");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(signUpRequest.email)) {
-      return generateErrorResponse(400, 'Invalid email format');
+      return generateErrorResponse(400, "Invalid email format");
     }
 
     if (signUpRequest.password.length < 8) {
-      return generateErrorResponse(400, 'Password must be at least 8 characters');
+      return generateErrorResponse(400, "Password must be at least 8 characters");
     }
 
     const jwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
@@ -91,7 +91,6 @@ export async function handler(event: any) {
       statusCode: 201,
       body: JSON.stringify({
         message: "User created successfully",
-        jwtToken: jwtToken,
         user: {
           username: userRecord.username,
           email: userRecord.email,
@@ -101,7 +100,10 @@ export async function handler(event: any) {
       }),
       headers: {
         "Content-Type": "application/json"
-      }
+      },
+      cookies: [
+        `jwt=${jwtToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${expirationTime}`
+      ]
     };
 
   } catch (error: any) {

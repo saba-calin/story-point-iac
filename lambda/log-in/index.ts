@@ -2,8 +2,7 @@ import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import {DynamoDBDocumentClient, GetCommand} from "@aws-sdk/lib-dynamodb";
 import {LogInRequest} from "./util/LogInRequest";
-import {generateErrorResponse, getJwtSecret} from "../util";
-import {UserQueryResponse} from "./util/UserQueryResponse";
+import {generateErrorResponse, getJwtSecret, UserQueryResponse} from "../util";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 
@@ -20,7 +19,7 @@ let cachedJwtSecret: string | null = null;
 export async function handler(event: any) {
   try {
     const logInRequest: LogInRequest = JSON.parse(event.body);
-    console.log("Log-in request: ", logInRequest);
+    console.log("Log-in request for user: ", logInRequest.username);
 
     if (!logInRequest.username || !logInRequest.password) {
       return generateErrorResponse(400, "Missing required fields");

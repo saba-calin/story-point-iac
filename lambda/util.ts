@@ -1,5 +1,20 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
+export interface UserContext {
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface UserQueryResponse {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
 export function generateErrorResponse(statusCode: number, message: string) {
   return {
     statusCode: statusCode,

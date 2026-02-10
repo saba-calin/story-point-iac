@@ -25,6 +25,7 @@ export class LambdaStack extends cdk.Stack {
     const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     this.deployTestLambda(constants);
+    this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
     this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
@@ -43,6 +44,30 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup
     });
+  }
+
+  private deployChangePasswordLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('change-password');
+
+    const changePasswordLambda = new lambda.Function(this, 'ChangePasswordLambda', {
+      functionName: 'change-password_lambda',
+      description: 'Lambda function that handles the password change of a user',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/change-password/dist/change-password'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        PASSWORD_SALT_ROUNDS: String(constants.password_salt_rounds)
+      }
+    });
+
+    usersTable.grantReadWriteData(changePasswordLambda);
   }
 
   private deployAuthorizerLambda(
@@ -119,7 +144,8 @@ export class LambdaStack extends cdk.Stack {
         USERS_TABLE: usersTable.tableName,
         USER_EMAILS_TABLE: userEmailsTable.tableName,
         JWT_SECRET_ARN: jwtSecretArn,
-        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days)
+        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days),
+        PASSWORD_SALT_ROUNDS: String(constants.password_salt_rounds)
       }
     });
 

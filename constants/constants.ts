@@ -9,6 +9,7 @@ export class Constants {
   public readonly root_url: string;
   public readonly lambda_memory_size: number;
   public readonly jwt_expiry_days: number;
+  public readonly password_salt_rounds: number;
 
   constructor(constantsFile: any) {
     this.root_domain_name = constantsFile.root_domain_name;
@@ -20,5 +21,6 @@ export class Constants {
     this.root_url = constantsFile.root_url;
     this.lambda_memory_size = constantsFile.lambda_memory_size;
     this.jwt_expiry_days = constantsFile.jwt_expiry_days;
+    this.password_salt_rounds = constantsFile.password_salt_rounds;
   }
 }

@@ -7,5 +7,6 @@
   "localhost_url": "http://localhost:5173",
   "root_url": "https://story-point.xyz",
   "lambda_memory_size": 3008,
-  "jwt_expiry_days": 1
+  "jwt_expiry_days": 1,
+  "password_salt_rounds": 10
 }

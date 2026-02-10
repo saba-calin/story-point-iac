@@ -1,7 +1,6 @@
-import {getCookieValue, getJwtSecret} from "../util";
+import {getCookieValue, getJwtSecret, UserContext} from "../util";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import * as jwt from "jsonwebtoken";
-import {UserContext} from "./util/UserContext";
 
 const secretsClient = new SecretsManagerClient({});
 

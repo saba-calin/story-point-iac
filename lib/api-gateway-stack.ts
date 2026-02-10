@@ -110,5 +110,13 @@ export class ApiGatewayStack extends cdk.Stack {
       integration: testLambdaIntegration,
       authorizer: authorizer
     })
+
+    const changePasswordLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('ChangePasswordLambdaIntegration', lambda.Function.fromFunctionName(this, 'ChangePasswordLambda', 'change-password_lambda'));
+    httpApi.addRoutes({
+      path: '/change-password',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: changePasswordLambdaIntegration,
+      authorizer: authorizer
+    })
   }
 }

@@ -14,6 +14,7 @@ const USERS_TABLE = process.env.USERS_TABLE!;
 const USER_EMAILS_TABLE = process.env.USER_EMAILS_TABLE!;
 const JWT_SECRET_ARN = process.env.JWT_SECRET_ARN!;
 const JWT_EXPIRY_DAYS = Number(process.env.JWT_EXPIRY_DAYS!);
+const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS!);
 
 let cachedJwtSecret: string | null = null;
 
@@ -36,9 +37,7 @@ export async function handler(event: any) {
     }
 
     cachedJwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
-
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(signUpRequest.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(signUpRequest.password, PASSWORD_SALT_ROUNDS);
 
     const userRecord = {
       username: signUpRequest.username,

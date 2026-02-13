@@ -38,10 +38,15 @@ const dynamoStack = new DynamoStack(app, 'DynamoStack', constants, {
   description: 'Stack used to create the DynamoDB tables'
 });
 
-new LambdaStack(app, 'LambdaStack', constants, dynamoStack.usersTable, dynamoStack.userEmailsTable, {
-  env: env,
-  description: 'Stack used to create all Lambda functions'
-});
+new LambdaStack(app, 'LambdaStack', constants,
+  dynamoStack.usersTable,
+  dynamoStack.userEmailsTable,
+  dynamoStack.roomsTable,
+  {
+    env: env,
+    description: 'Stack used to create all Lambda functions'
+  }
+);
 
 new ApiGatewayStack(app, 'ApiGatewayStack', constants, hostedZoneStack.customDomainName, {
   env: env,

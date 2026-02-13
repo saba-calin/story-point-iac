@@ -15,6 +15,11 @@ export interface UserQueryResponse {
   password: string;
 }
 
+export enum RoomStatus {
+  OPEN = "OPEN",
+  CLOSED = "CLOSED"
+}
+
 export function generateErrorResponse(statusCode: number, message: string) {
   return {
     statusCode: statusCode,

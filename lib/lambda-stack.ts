@@ -14,8 +14,12 @@ export class LambdaStack extends cdk.Stack {
     scope: Construct,
     id: string,
     constants: Constants,
+
     usersTable: dynamodb.TableV2,
     userEmailsTable: dynamodb.TableV2,
+
+    roomsTable: dynamodb.TableV2,
+
     props?: cdk.StackProps
   ) {
 
@@ -25,6 +29,7 @@ export class LambdaStack extends cdk.Stack {
     const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     this.deployTestLambda(constants);
+    this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
@@ -44,6 +49,29 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup
     });
+  }
+
+  private deployCreateRoomLambda(
+    constants: Constants,
+    roomsTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('create-room');
+
+    const createRoomLambda = new lambda.Function(this, 'CreateRoomLambda', {
+      functionName: 'create-room_lambda',
+      description: 'Lambda function that handles the creation of a room',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/create-room/dist/create-room'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOMS_TABLE: roomsTable.tableName
+      }
+    });
+
+    roomsTable.grantReadWriteData(createRoomLambda);
   }
 
   private deployChangePasswordLambda(

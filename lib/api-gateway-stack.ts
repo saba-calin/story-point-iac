@@ -109,7 +109,7 @@ export class ApiGatewayStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: testLambdaIntegration,
       authorizer: authorizer
-    })
+    });
 
     const changePasswordLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('ChangePasswordLambdaIntegration', lambda.Function.fromFunctionName(this, 'ChangePasswordLambda', 'change-password_lambda'));
     httpApi.addRoutes({
@@ -117,6 +117,14 @@ export class ApiGatewayStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: changePasswordLambdaIntegration,
       authorizer: authorizer
-    })
+    });
+
+    const createRoomLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('CreateRoomLambdaIntegration', lambda.Function.fromFunctionName(this, 'CreateRoomLambda', 'create-room_lambda'));
+    httpApi.addRoutes({
+      path: '/create-room',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: createRoomLambdaIntegration,
+      authorizer: authorizer
+    });
   }
 }

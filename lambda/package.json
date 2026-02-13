@@ -8,6 +8,7 @@
     "log-in",
     "authorizer",
     "change-password",
+    "create-room",
     "test"
   ],
   "devDependencies": {

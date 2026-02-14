@@ -8,7 +8,8 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import {Constants} from "../constants/constants";
 
 export class HostedZoneStack extends cdk.Stack {
-  public readonly customDomainName: apigwv2.DomainName;
+  public readonly apiCustomDomainName: apigwv2.DomainName;
+  public readonly wsCustomDomainName: apigwv2.DomainName;
 
   constructor(scope: Construct, id: string, constants: Constants, props?: cdk.StackProps) {
 
@@ -26,7 +27,8 @@ export class HostedZoneStack extends cdk.Stack {
       domainName: constants.root_domain_name,
       subjectAlternativeNames:[
         constants.www_domain_name,
-        constants.api_domain_name
+        constants.api_domain_name,
+        constants.ws_domain_name
       ],
       allowExport: false,
       validation: acm.CertificateValidation.fromDns(hostedZone),
@@ -37,20 +39,38 @@ export class HostedZoneStack extends cdk.Stack {
       stringValue: rootCertificate.certificateArn
     });
 
-    this.customDomainName = new apigwv2.DomainName(this, 'CustomDomainName', {
+    this.apiCustomDomainName = new apigwv2.DomainName(this, 'ApiCustomDomainName', {
       domainName: constants.api_domain_name,
       endpointType: apigwv2.EndpointType.REGIONAL,
       ipAddressType: apigwv2.IpAddressType.IPV4,
       securityPolicy: apigwv2.SecurityPolicy.TLS_1_2,
       certificate: rootCertificate
     });
-    new route53.ARecord(this, 'CustomDomainNameARecord', {
+    new route53.ARecord(this, 'ApiCustomDomainNameARecord', {
       zone: hostedZone,
       recordName: constants.api_domain_name,
       target: route53.RecordTarget.fromAlias(
         new targets.ApiGatewayv2DomainProperties(
-          this.customDomainName.regionalDomainName,
-          this.customDomainName.regionalHostedZoneId
+          this.apiCustomDomainName.regionalDomainName,
+          this.apiCustomDomainName.regionalHostedZoneId
+        )
+      )
+    });
+
+    this.wsCustomDomainName = new apigwv2.DomainName(this, 'WsCustomDomainName', {
+      domainName: constants.ws_domain_name,
+      endpointType: apigwv2.EndpointType.REGIONAL,
+      ipAddressType: apigwv2.IpAddressType.IPV4,
+      securityPolicy: apigwv2.SecurityPolicy.TLS_1_2,
+      certificate: rootCertificate
+    });
+    new route53.ARecord(this, 'WsCustomDomainNameARecord', {
+      zone: hostedZone,
+      recordName: constants.ws_domain_name,
+      target: route53.RecordTarget.fromAlias(
+        new targets.ApiGatewayv2DomainProperties(
+          this.wsCustomDomainName.regionalDomainName,
+          this.wsCustomDomainName.regionalHostedZoneId
         )
       )
     });

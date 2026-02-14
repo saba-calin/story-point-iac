@@ -49,7 +49,7 @@ new LambdaStack(app, 'LambdaStack', constants,
   }
 );
 
-new ApiGatewayStack(app, 'ApiGatewayStack', constants, hostedZoneStack.customDomainName, {
+new ApiGatewayStack(app, 'ApiGatewayStack', constants, hostedZoneStack.apiCustomDomainName, {
   env: env,
   description: 'Stack used to create the API Gateway'
 });

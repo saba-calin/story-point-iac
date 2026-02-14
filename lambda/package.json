@@ -9,6 +9,7 @@
     "authorizer",
     "change-password",
     "create-room",
+    "ws-connect",
     "test"
   ],
   "devDependencies": {

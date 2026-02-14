@@ -73,3 +73,8 @@ jobs:
         run: |
           cdk synth ApiGatewayStack
           cdk deploy --require-approval never ApiGatewayStack
+
+      - name: Deploy WebSocket API Stack
+        run: |
+          cdk synth WsApiStack
+          cdk deploy --require-approval never WsApiStack

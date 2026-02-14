@@ -29,6 +29,7 @@ export class LambdaStack extends cdk.Stack {
     const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     this.deployTestLambda(constants);
+    this.deployWsConnectLambda(constants);
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
@@ -46,6 +47,21 @@ export class LambdaStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/test/dist/test'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup
+    });
+  }
+
+  private deployWsConnectLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-connect');
+
+    new lambda.Function(this, 'WsConnect', {
+      functionName: 'ws-connect_lambda',
+      description: 'Lambda function that handles the connection to the WS API (used for authorization)',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-connect/dist/ws-connect'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup
     });

@@ -9,6 +9,7 @@ import {DynamoStack} from "../lib/dynamo-stack";
 import {LambdaStack} from "../lib/lambda-stack";
 import {ApiGatewayStack} from "../lib/api-gateway-stack";
 import {SecretsStack} from "../lib/secrets-stack";
+import {WsApiStack} from "../lib/ws-api-stack";
 
 const app = new cdk.App();
 const env = {
@@ -51,4 +52,9 @@ new LambdaStack(app, 'LambdaStack', constants,
 new ApiGatewayStack(app, 'ApiGatewayStack', constants, hostedZoneStack.customDomainName, {
   env: env,
   description: 'Stack used to create the API Gateway'
+});
+
+new WsApiStack(app, 'WsApiStack', constants, {
+  env: env,
+  description: 'Stack used to create the WebSocket API'
 });

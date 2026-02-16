@@ -8,6 +8,7 @@ import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
 import {ISecret} from "aws-cdk-lib/aws-secretsmanager";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export class LambdaStack extends cdk.Stack {
   constructor(
@@ -29,6 +30,8 @@ export class LambdaStack extends cdk.Stack {
     const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
 
     this.deployTestLambda(constants);
+    this.deployWsTestLambda(constants);
+
     this.deployWsConnectLambda(constants);
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
@@ -50,6 +53,26 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup
     });
+  }
+
+  private deployWsTestLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-test');
+
+    const wsTestLambda = new lambda.Function(this, 'WsTestLambda', {
+      functionName: 'ws-test_lambda',
+      description: 'Lambda function to test the websocket connection',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-test/dist/ws-test'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup
+    });
+
+    wsTestLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
   }
 
   private deployWsConnectLambda(constants: Constants) {
@@ -158,7 +181,8 @@ export class LambdaStack extends cdk.Stack {
       environment: {
         USERS_TABLE: usersTable.tableName,
         JWT_SECRET_ARN: jwtSecretArn,
-        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days)
+        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days),
+        ROOT_DOMAIN: constants.root_domain_name
       }
     });
 
@@ -189,7 +213,8 @@ export class LambdaStack extends cdk.Stack {
         USER_EMAILS_TABLE: userEmailsTable.tableName,
         JWT_SECRET_ARN: jwtSecretArn,
         JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days),
-        PASSWORD_SALT_ROUNDS: String(constants.password_salt_rounds)
+        PASSWORD_SALT_ROUNDS: String(constants.password_salt_rounds),
+        ROOT_DOMAIN: constants.root_domain_name
       }
     });
 

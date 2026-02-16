@@ -54,7 +54,7 @@ new ApiGatewayStack(app, 'ApiGatewayStack', constants, hostedZoneStack.apiCustom
   description: 'Stack used to create the API Gateway'
 });
 
-new WsApiStack(app, 'WsApiStack', constants, {
+new WsApiStack(app, 'WsApiStack', constants, hostedZoneStack.wsCustomDomainName, {
   env: env,
   description: 'Stack used to create the WebSocket API'
 });

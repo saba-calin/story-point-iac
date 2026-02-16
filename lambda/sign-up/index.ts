@@ -15,6 +15,7 @@ const USER_EMAILS_TABLE = process.env.USER_EMAILS_TABLE!;
 const JWT_SECRET_ARN = process.env.JWT_SECRET_ARN!;
 const JWT_EXPIRY_DAYS = Number(process.env.JWT_EXPIRY_DAYS!);
 const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS!);
+const ROOT_DOMAIN = process.env.ROOT_DOMAIN!;
 
 let cachedJwtSecret: string | null = null;
 
@@ -101,7 +102,8 @@ export async function handler(event: any) {
         "Content-Type": "application/json"
       },
       cookies: [
-        `jwt=${jwtToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${expirationTime}`
+        `jwt=${jwtToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${expirationTime} Domain=.${ROOT_DOMAIN}`
+        // `jwt=${jwtToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${expirationTime}; Domain=.${ROOT_DOMAIN}`
       ]
     };
 

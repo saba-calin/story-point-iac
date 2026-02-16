@@ -8,6 +8,7 @@ import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
 import {AccessLogFormat} from "aws-cdk-lib/aws-apigateway";
+import * as http from "node:http";
 
 export class ApiGatewayStack extends cdk.Stack {
   constructor(
@@ -99,10 +100,10 @@ export class ApiGatewayStack extends cdk.Stack {
     const authorizerLambda = lambda.Function.fromFunctionName(this, 'AuthorizerLambda', 'authorizer_lambda');
     const authorizer = new apigwv2Authorizers.HttpLambdaAuthorizer('LambdaAuthorizer', authorizerLambda, {
       authorizerName: 'StoryPointLambdaAuthorizer',
-      responseTypes: [apigwv2Authorizers.HttpLambdaResponseType.SIMPLE],
       resultsCacheTtl: Duration.seconds(0),
-      identitySource: []
+      identitySource: ['$request.header.cookie']
     });
+
     const testLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('TestLambdaIntegration', lambda.Function.fromFunctionName(this, 'TestLambda', 'test_lambda'));
     httpApi.addRoutes({
       path: '/test',
@@ -126,5 +127,9 @@ export class ApiGatewayStack extends cdk.Stack {
       integration: createRoomLambdaIntegration,
       authorizer: authorizer
     });
+
+    const cfnAuthorizer = httpApi.node.findChild('LambdaAuthorizer').node.defaultChild as apigwv2.CfnAuthorizer;
+    cfnAuthorizer.authorizerPayloadFormatVersion = '2.0';
+    cfnAuthorizer.enableSimpleResponses = false;
   }
 }

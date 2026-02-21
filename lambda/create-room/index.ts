@@ -39,9 +39,7 @@ export async function handler(event: any) {
 
     return {
       statusCode: 201,
-      body: JSON.stringify({
-        roomRecord
-      }),
+      body: JSON.stringify(roomRecord),
       headers: {
         "Content-Type": "application/json"
       }

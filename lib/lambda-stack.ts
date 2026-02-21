@@ -33,6 +33,8 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsTestLambda(constants);
 
     this.deployWsConnectLambda(constants);
+    this.deployWsJoinRoomLambda(constants);
+
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
@@ -73,6 +75,21 @@ export class LambdaStack extends cdk.Stack {
       actions: ['execute-api:ManageConnections'],
       resources: ['arn:aws:execute-api:*:*:*']
     }));
+  }
+
+  private deployWsJoinRoomLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-join-room');
+
+    new lambda.Function(this, 'WsJoinRoom', {
+      functionName: 'ws-join-room_lambda',
+      description: 'Lambda function that handles the event of a user joining a room',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-join-room/dist/ws-join-room'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup
+    });
   }
 
   private deployWsConnectLambda(constants: Constants) {

@@ -45,7 +45,6 @@ export async function handler(event: any) {
         roomId: joinRoomRequest.roomId
       }
     }));
-
     const room = roomResult.Item as RoomQueryResponse;
     if (!room) {
       await sendErrorMessageToConnection(connectionId, `Room with id ${joinRoomRequest.roomId} not found`, client);

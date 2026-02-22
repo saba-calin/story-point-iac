@@ -40,6 +40,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsConnectLambda(constants);
     this.deployWsDisconnectLambda(constants);
     this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable);
+    this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
@@ -122,6 +123,42 @@ export class LambdaStack extends cdk.Stack {
     }));
   }
 
+  private deployWsCreateStoryLambda(
+    constants: Constants,
+    roomsTable: dynamodb.TableV2,
+    storiesTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2,
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-create-story');
+
+    const wsCreateStoryLambda = new lambda.Function(this, 'WsCreateStory', {
+      functionName: 'ws-create-story_lambda',
+      description: 'Lambda function that handles the creation of a story and broadcasts it to the users in the room',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-create-story/dist/ws-create-story'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOMS_TABLE: roomsTable.tableName,
+        STORIES_TABLE: storiesTable.tableName,
+        WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+
+        WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+      }
+    });
+
+    roomsTable.grantReadData(wsCreateStoryLambda);
+    storiesTable.grantReadWriteData(wsCreateStoryLambda);
+    webSocketConnectionsTable.grantReadWriteData(wsCreateStoryLambda);
+
+    wsCreateStoryLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
+  }
+
   private deployWsConnectLambda(constants: Constants) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-connect');
 
@@ -140,7 +177,7 @@ export class LambdaStack extends cdk.Stack {
   private deployWsDisconnectLambda(constants: Constants) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-disconnect');
 
-    new lambda.Function(this, 'WsDisconnect', {
+    const wsDisconnectLambda = new lambda.Function(this, 'WsDisconnect', {
       functionName: 'ws-disconnect_lambda',
       description: 'Lambda function that handles the disconnect event of WebSocket API',
       architecture: lambda.Architecture.ARM_64,
@@ -150,6 +187,11 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup
     });
+
+    wsDisconnectLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
   }
 
   private deployCreateRoomLambda(

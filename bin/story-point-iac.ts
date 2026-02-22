@@ -43,6 +43,10 @@ new LambdaStack(app, 'LambdaStack', constants,
   dynamoStack.usersTable,
   dynamoStack.userEmailsTable,
   dynamoStack.roomsTable,
+  dynamoStack.roomParticipantsTable,
+  dynamoStack.webSocketConnectionsTable,
+  dynamoStack.storiesTable,
+  dynamoStack.votesTable,
   {
     env: env,
     description: 'Stack used to create all Lambda functions'

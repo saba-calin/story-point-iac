@@ -50,7 +50,7 @@ export class DynamoStack extends cdk.Stack {
       partitionKey: {name: 'connectionId', type: dynamodb.AttributeType.STRING},
       globalSecondaryIndexes: [
         {
-          indexName: 'connectionIdsByRoom',
+          indexName: constants.ws_connections_table_index_name,
           partitionKey: {name: 'roomId', type: dynamodb.AttributeType.STRING},
           sortKey: {name: 'connectionId', type: dynamodb.AttributeType.STRING}
         }

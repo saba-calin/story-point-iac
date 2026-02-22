@@ -8,6 +8,7 @@ export class Constants {
   public readonly jwt_secret_arn_parameter: string;
   public readonly localhost_url: string;
   public readonly root_url: string;
+  public readonly ws_connections_table_index_name: string;
   public readonly lambda_memory_size: number;
   public readonly jwt_expiry_days: number;
   public readonly password_salt_rounds: number;
@@ -21,6 +22,7 @@ export class Constants {
     this.jwt_secret_arn_parameter = constantsFile.jwt_secret_arn_parameter;
     this.localhost_url = constantsFile.localhost_url;
     this.root_url = constantsFile.root_url;
+    this.ws_connections_table_index_name = constantsFile.ws_connections_table_index_name;
     this.lambda_memory_size = constantsFile.lambda_memory_size;
     this.jwt_expiry_days = constantsFile.jwt_expiry_days;
     this.password_salt_rounds = constantsFile.password_salt_rounds;

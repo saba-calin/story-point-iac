@@ -1,4 +1,9 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+import {
+  ApiGatewayManagementApiClient,
+  DeleteConnectionCommand,
+  PostToConnectionCommand
+} from "@aws-sdk/client-apigatewaymanagementapi";
 
 export interface UserContext {
   username: string;
@@ -15,9 +20,22 @@ export interface UserQueryResponse {
   password: string;
 }
 
+export enum StoryStatus {
+  ACTIVE = "ACTIVE",
+  NON_ACTIVE = "NON_ACTIVE"
+}
+
 export enum RoomStatus {
   OPEN = "OPEN",
   CLOSED = "CLOSED"
+}
+
+export interface RoomQueryResponse {
+  roomId: string,
+  name: string,
+  ownerUsername: string,
+  createdAt: Date,
+  status: RoomStatus
 }
 
 export function generateErrorResponse(statusCode: number, message: string) {
@@ -65,4 +83,33 @@ export async function getJwtSecret(
 
   cachedJwtSecret = res.SecretString!;
   return cachedJwtSecret;
+}
+
+export async function sendErrorMessageToConnection(connectionId: string, message: string, client: ApiGatewayManagementApiClient) {
+  await client.send(new PostToConnectionCommand({
+    ConnectionId: connectionId,
+    Data: JSON.stringify({
+      action: "error",
+      message: message
+    })
+  }));
+}
+
+export async function closeConnection(connectionId: string, client: ApiGatewayManagementApiClient) {
+  await client.send(new DeleteConnectionCommand({
+    ConnectionId: connectionId
+  }));
+}
+
+export async function sendToConnection(connectionId: string, client: ApiGatewayManagementApiClient, data: object) {
+  await client.send(new PostToConnectionCommand({
+    ConnectionId: connectionId,
+    Data: JSON.stringify(data)
+  }));
+}
+
+export function ok() {
+  return {
+    statusCode: 200
+  };
 }

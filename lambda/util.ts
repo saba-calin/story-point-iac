@@ -38,6 +38,14 @@ export interface RoomQueryResponse {
   status: RoomStatus
 }
 
+export interface StoryQueryResponse {
+  roomId: string;
+  storyId: string;
+  name: string;
+  description: string;
+  status: StoryStatus;
+}
+
 export function generateErrorResponse(statusCode: number, message: string) {
   return {
     statusCode: statusCode,

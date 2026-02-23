@@ -41,6 +41,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsDisconnectLambda(constants);
     this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable);
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
+    this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
@@ -154,6 +155,42 @@ export class LambdaStack extends cdk.Stack {
     webSocketConnectionsTable.grantReadWriteData(wsCreateStoryLambda);
 
     wsCreateStoryLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
+  }
+
+  private deployWsSetActiveStoryLambda(
+    constants: Constants,
+    roomsTable: dynamodb.TableV2,
+    storiesTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2,
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-set-active-story');
+
+    const wsSetActiveStoryLambda = new lambda.Function(this, 'WsSetActiveStory', {
+      functionName: 'ws-set-active-story_lambda',
+      description: 'Lambda function that handles the event of the room owner setting the active story for the room and broadcasts it to all players in the room',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-set-active-story/dist/ws-set-active-story'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOMS_TABLE: roomsTable.tableName,
+        STORIES_TABLE: storiesTable.tableName,
+        WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+
+        WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+      }
+    });
+
+    roomsTable.grantReadData(wsSetActiveStoryLambda);
+    storiesTable.grantReadWriteData(wsSetActiveStoryLambda);
+    webSocketConnectionsTable.grantReadWriteData(wsSetActiveStoryLambda);
+
+    wsSetActiveStoryLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['execute-api:ManageConnections'],
       resources: ['arn:aws:execute-api:*:*:*']
     }));

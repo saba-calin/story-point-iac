@@ -13,6 +13,7 @@
     "ws-disconnect",
     "ws-join-room",
     "ws-create-story",
+    "ws-set-active-story",
     "test",
     "ws-test"
   ],

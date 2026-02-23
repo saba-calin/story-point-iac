@@ -5,6 +5,7 @@ import {
   RoomStatus,
   sendErrorMessageToConnection,
   sendToConnection,
+  StoryStatus,
   UserContext
 } from "../util";
 import {CreateStoryRequest} from "./util/CreateStoryRequest";
@@ -60,7 +61,8 @@ export async function handler(event: any) {
       roomId: createStoryRequest.roomId,
       storyId: randomUUID(),
       name: createStoryRequest.name,
-      description: createStoryRequest.description
+      description: createStoryRequest.description,
+      status: StoryStatus.NON_ACTIVE
     }
     await docClient.send(new PutCommand({
       TableName: STORIES_TABLE,
@@ -76,7 +78,6 @@ export async function handler(event: any) {
       }
     }));
     const connections = connectionsResult.Items?.map(c => c.connectionId) ?? [];
-    console.log("Connections: ", connections);
 
     await Promise.all(
       connections.map(connectionId => sendToConnection(connectionId, client, {

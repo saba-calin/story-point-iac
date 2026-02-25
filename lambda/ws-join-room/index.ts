@@ -115,7 +115,7 @@ export async function handler(event: any) {
     await sendToConnection(connectionId, client, {
       action: "roomJoined",
       room: room,
-      players: players.filter(p => p !== userContext.username),
+      players: players,
       stories: stories
     });
 

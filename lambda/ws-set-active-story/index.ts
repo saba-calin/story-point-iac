@@ -69,7 +69,7 @@ export async function handler(event: any) {
       await closeConnection(connectionId, client);
       return ok();
     }
-    if (story.status == StoryStatus.ACTIVE) {
+    if (story.status === StoryStatus.ACTIVE) {
       // no need to broadcast to users since it is already active
       return ok();
     }

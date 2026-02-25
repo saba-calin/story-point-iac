@@ -42,9 +42,12 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable);
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
     this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
+    // this.deployWsVoteLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
+
+    this.deployAuthMeLambda(constants);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
     this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
@@ -196,6 +199,42 @@ export class LambdaStack extends cdk.Stack {
     }));
   }
 
+  // private deployWsVoteLambda(
+  //   constants: Constants,
+  //   roomsTable: dynamodb.TableV2,
+  //   storiesTable: dynamodb.TableV2,
+  //   webSocketConnectionsTable: dynamodb.TableV2,
+  // ) {
+  //   const logGroup = this.createLambdaFunctionLogGroup('ws-vote');
+  //
+  //   const wsVoteLambda = new lambda.Function(this, 'WsSetActiveStory', {
+  //     functionName: 'ws-vote_lambda',
+  //     description: 'Lambda function that handles the event of the room owner setting the active story for the room and broadcasts it to all players in the room',
+  //     architecture: lambda.Architecture.ARM_64,
+  //     runtime: lambda.Runtime.NODEJS_22_X,
+  //     handler: 'index.handler',
+  //     code: lambda.Code.fromAsset('lambda/ws-set-active-story/dist/ws-set-active-story'),
+  //     memorySize: constants.lambda_memory_size,
+  //     logGroup: logGroup,
+  //     environment: {
+  //       ROOMS_TABLE: roomsTable.tableName,
+  //       STORIES_TABLE: storiesTable.tableName,
+  //       WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+  //
+  //       WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+  //     }
+  //   });
+  //
+  //   roomsTable.grantReadData(wsVoteLambda);
+  //   storiesTable.grantReadWriteData(wsVoteLambda);
+  //   webSocketConnectionsTable.grantReadWriteData(wsVoteLambda);
+  //
+  //   wsVoteLambda.addToRolePolicy(new iam.PolicyStatement({
+  //     actions: ['execute-api:ManageConnections'],
+  //     resources: ['arn:aws:execute-api:*:*:*']
+  //   }));
+  // }
+
   private deployWsConnectLambda(constants: Constants) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-connect');
 
@@ -276,6 +315,21 @@ export class LambdaStack extends cdk.Stack {
     });
 
     usersTable.grantReadWriteData(changePasswordLambda);
+  }
+
+  private deployAuthMeLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('auth-me');
+
+    new lambda.Function(this, 'AuthMeLambda', {
+      functionName: 'auth-me_lambda',
+      description: 'Lambda function that returns the credentials of a logged in user',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/auth-me/dist/auth-me'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup
+    });
   }
 
   private deployAuthorizerLambda(

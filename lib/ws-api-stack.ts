@@ -115,6 +115,11 @@ export class WsApiStack extends cdk.Stack {
       integration: wsSetActiveStoryLambdaIntegration
     });
 
+    const wsVoteLambdaIntegration = new apigwv2Integrations.WebSocketLambdaIntegration('WsVoteLambdaIntegration', lambda.Function.fromFunctionName(this, 'WsVoteLambda', 'ws-vote-lambda'));
+    wsApi.addRoute("vote", {
+      integration: wsVoteLambdaIntegration
+    });
+
     const wsTestLambdaIntegration = new apigwv2Integrations.WebSocketLambdaIntegration('WsTestLambdaIntegration', lambda.Function.fromFunctionName(this, 'WsTestLambda', 'ws-test_lambda'));
     wsApi.addRoute("test", {
       integration: wsTestLambdaIntegration

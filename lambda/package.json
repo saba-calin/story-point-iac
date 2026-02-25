@@ -6,6 +6,7 @@
   "workspaces": [
     "sign-up",
     "log-in",
+    "auth-me",
     "authorizer",
     "change-password",
     "create-room",
@@ -14,6 +15,7 @@
     "ws-join-room",
     "ws-create-story",
     "ws-set-active-story",
+    "ws-vote",
     "test",
     "ws-test"
   ],
@@ -33,6 +35,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "aws-xray-sdk-core": "^3.12.0",
     "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "uuidv7": "^1.1.0"
   }
 }

@@ -20,6 +20,8 @@ export interface UserQueryResponse {
   password: string;
 }
 
+export const VALID_VOTES = ["1", "2", "3", "5", "8", "13", "21", "?"];
+
 export enum StoryStatus {
   ACTIVE = "ACTIVE",
   NON_ACTIVE = "NON_ACTIVE"

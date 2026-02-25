@@ -12,7 +12,7 @@ import {CreateStoryRequest} from "./util/CreateStoryRequest";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand} from "@aws-sdk/lib-dynamodb";
 import {ApiGatewayManagementApiClient} from "@aws-sdk/client-apigatewaymanagementapi";
-import {randomUUID} from "node:crypto";
+import { uuidv7 } from 'uuidv7';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -59,7 +59,7 @@ export async function handler(event: any) {
 
     const storyRecord = {
       roomId: createStoryRequest.roomId,
-      storyId: randomUUID(),
+      storyId: uuidv7(),
       name: createStoryRequest.name,
       description: createStoryRequest.description,
       status: StoryStatus.NON_ACTIVE

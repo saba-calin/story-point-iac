@@ -1,0 +1,9 @@
+{
+  "name": "ws-vote",
+  "version": "0.1.0",
+  "description": "Lambda function that handles the voting for a story which is set to active",
+  "main": "index.ts",
+  "scripts": {
+    "build": "rm -rf dist && esbuild ./ --entry-names=[dir]/[name]/index --external:pg-native --bundle --minify --platform=node --target=node22.0.0 --outdir=dist"
+  }
+}

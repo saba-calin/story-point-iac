@@ -128,6 +128,14 @@ export class ApiGatewayStack extends cdk.Stack {
       authorizer: authorizer
     });
 
+    const authMeLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('AuthMeLambdaIntegration', lambda.Function.fromFunctionName(this, 'AuthMeLambda', 'auth-me_lambda'));
+    httpApi.addRoutes({
+      path: '/auth/me',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: authMeLambdaIntegration,
+      authorizer: authorizer
+    });
+
     const cfnAuthorizer = httpApi.node.findChild('LambdaAuthorizer').node.defaultChild as apigwv2.CfnAuthorizer;
     cfnAuthorizer.authorizerPayloadFormatVersion = '2.0';
     cfnAuthorizer.enableSimpleResponses = false;

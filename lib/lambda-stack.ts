@@ -42,7 +42,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable);
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
     this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
-    // this.deployWsVoteLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
+    this.deployWsVoteLambda(constants, roomsTable, storiesTable, votesTable, roomParticipantsTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
@@ -199,41 +199,47 @@ export class LambdaStack extends cdk.Stack {
     }));
   }
 
-  // private deployWsVoteLambda(
-  //   constants: Constants,
-  //   roomsTable: dynamodb.TableV2,
-  //   storiesTable: dynamodb.TableV2,
-  //   webSocketConnectionsTable: dynamodb.TableV2,
-  // ) {
-  //   const logGroup = this.createLambdaFunctionLogGroup('ws-vote');
-  //
-  //   const wsVoteLambda = new lambda.Function(this, 'WsSetActiveStory', {
-  //     functionName: 'ws-vote_lambda',
-  //     description: 'Lambda function that handles the event of the room owner setting the active story for the room and broadcasts it to all players in the room',
-  //     architecture: lambda.Architecture.ARM_64,
-  //     runtime: lambda.Runtime.NODEJS_22_X,
-  //     handler: 'index.handler',
-  //     code: lambda.Code.fromAsset('lambda/ws-set-active-story/dist/ws-set-active-story'),
-  //     memorySize: constants.lambda_memory_size,
-  //     logGroup: logGroup,
-  //     environment: {
-  //       ROOMS_TABLE: roomsTable.tableName,
-  //       STORIES_TABLE: storiesTable.tableName,
-  //       WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
-  //
-  //       WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
-  //     }
-  //   });
-  //
-  //   roomsTable.grantReadData(wsVoteLambda);
-  //   storiesTable.grantReadWriteData(wsVoteLambda);
-  //   webSocketConnectionsTable.grantReadWriteData(wsVoteLambda);
-  //
-  //   wsVoteLambda.addToRolePolicy(new iam.PolicyStatement({
-  //     actions: ['execute-api:ManageConnections'],
-  //     resources: ['arn:aws:execute-api:*:*:*']
-  //   }));
-  // }
+  private deployWsVoteLambda(
+    constants: Constants,
+    roomsTable: dynamodb.TableV2,
+    storiesTable: dynamodb.TableV2,
+    votesTable: dynamodb.TableV2,
+    roomParticipantsTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-vote');
+
+    const wsVoteLambda = new lambda.Function(this, 'WsVote', {
+      functionName: 'ws-vote_lambda',
+      description: 'Lambda function that handles the voting for a story which is set to active',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-vote/dist/ws-vote'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOMS_TABLE: roomsTable.tableName,
+        STORIES_TABLE: storiesTable.tableName,
+        VOTES_TABLE: votesTable.tableName,
+        ROOM_PARTICIPANTS_TABLE: roomParticipantsTable.tableName,
+        WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+
+        WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+      }
+    });
+
+    roomsTable.grantReadData(wsVoteLambda);
+    storiesTable.grantReadWriteData(wsVoteLambda);
+    votesTable.grantReadWriteData(wsVoteLambda);
+    roomParticipantsTable.grantReadWriteData(wsVoteLambda);
+    webSocketConnectionsTable.grantReadWriteData(wsVoteLambda);
+
+    wsVoteLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
+  }
 
   private deployWsConnectLambda(constants: Constants) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-connect');

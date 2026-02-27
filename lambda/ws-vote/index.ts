@@ -91,12 +91,12 @@ export async function handler(event: any) {
         storyId: voteRequest.storyId,
         username: userContext.username
       },
-      UpdateExpression: "SET #v = :vote",
+      UpdateExpression: "SET #v = :voteValue",
       ExpressionAttributeNames: {
-        "#v": "vote"
+        "#v": "voteValue"
       },
       ExpressionAttributeValues: {
-        ":vote": voteRequest.voteValue
+        ":voteValue": voteRequest.voteValue
       }
     }));
 

@@ -48,6 +48,12 @@ export interface StoryQueryResponse {
   status: StoryStatus;
 }
 
+export interface VotesQueryResponse {
+  storyId: string,
+  username: string,
+  voteValue: string
+}
+
 export function generateErrorResponse(statusCode: number, message: string) {
   return {
     statusCode: statusCode,

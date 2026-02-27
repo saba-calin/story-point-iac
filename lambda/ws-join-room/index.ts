@@ -4,8 +4,11 @@ import {
   ok,
   RoomQueryResponse,
   RoomStatus,
-  sendErrorMessageToConnection, sendToConnection,
-  UserContext
+  sendErrorMessageToConnection,
+  sendToConnection,
+  StoryQueryResponse,
+  StoryStatus,
+  UserContext, VotesQueryResponse
 } from "../util";
 import {ApiGatewayManagementApiClient} from "@aws-sdk/client-apigatewaymanagementapi";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
@@ -18,6 +21,7 @@ const ROOMS_TABLE = process.env.ROOMS_TABLE!;
 const WS_CONNECTIONS_TABLE = process.env.WS_CONNECTIONS_TABLE!;
 const ROOM_PARTICIPANTS_TABLE = process.env.ROOM_PARTICIPANTS_TABLE!;
 const STORIES_TABLE = process.env.STORIES_TABLE!;
+const VOTES_TABLE = process.env.VOTES_TABLE!;
 
 const WS_CONNECTIONS_TABLE_INDEX = process.env.WS_CONNECTIONS_TABLE_INDEX!;
 
@@ -97,8 +101,22 @@ export async function handler(event: any) {
         ":roomId": joinRoomRequest.roomId,
       }
     }));
-    const stories = storiesResult.Items ?? [];
+    const stories = storiesResult.Items as StoryQueryResponse[] ?? [];
     console.log("Stories", stories);
+
+    // Fetch all votes for the active story, if any
+    const activeStory = stories.find(story => story.status === StoryStatus.ACTIVE);
+    let votes: VotesQueryResponse[] = [];
+    if (activeStory) {
+      const votesResult = await docClient.send(new QueryCommand({
+        TableName: VOTES_TABLE,
+        KeyConditionExpression: "storyId = :storyId",
+        ExpressionAttributeValues: {
+          ":storyId": activeStory.storyId
+        }
+      }));
+      votes = votesResult.Items as VotesQueryResponse[] ?? [];
+    }
 
     // Fetch all active connections in the room
     const connectionsResult = await docClient.send(new QueryCommand({
@@ -116,7 +134,8 @@ export async function handler(event: any) {
       action: "roomJoined",
       room: room,
       players: players,
-      stories: stories
+      stories: stories,
+      votes: votes
     });
 
     await Promise.all(

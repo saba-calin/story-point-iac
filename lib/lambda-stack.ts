@@ -39,7 +39,7 @@ export class LambdaStack extends cdk.Stack {
 
     this.deployWsConnectLambda(constants);
     this.deployWsDisconnectLambda(constants);
-    this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable);
+    this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable, votesTable);
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
     this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
     this.deployWsVoteLambda(constants, roomsTable, storiesTable, votesTable, roomParticipantsTable, webSocketConnectionsTable);
@@ -93,7 +93,8 @@ export class LambdaStack extends cdk.Stack {
     roomsTable: dynamodb.TableV2,
     webSocketConnectionsTable: dynamodb.TableV2,
     roomParticipantsTable: dynamodb.TableV2,
-    storiesTable: dynamodb.TableV2
+    storiesTable: dynamodb.TableV2,
+    votesTable: dynamodb.TableV2
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-join-room');
 
@@ -111,6 +112,7 @@ export class LambdaStack extends cdk.Stack {
         WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
         ROOM_PARTICIPANTS_TABLE: roomParticipantsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
+        VOTES_TABLE: votesTable.tableName,
 
         WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
       }
@@ -120,6 +122,7 @@ export class LambdaStack extends cdk.Stack {
     webSocketConnectionsTable.grantReadWriteData(wsJoinRoomLambda);
     roomParticipantsTable.grantReadWriteData(wsJoinRoomLambda);
     storiesTable.grantReadWriteData(wsJoinRoomLambda);
+    votesTable.grantReadData(wsJoinRoomLambda);
 
     wsJoinRoomLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['execute-api:ManageConnections'],

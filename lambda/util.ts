@@ -54,6 +54,13 @@ export interface VotesQueryResponse {
   voteValue: string
 }
 
+export interface ConnectionQueryResponse {
+  connectionId: string,
+  joinedAt: number,
+  roomId: string,
+  username: string
+}
+
 export function generateErrorResponse(statusCode: number, message: string) {
   return {
     statusCode: statusCode,

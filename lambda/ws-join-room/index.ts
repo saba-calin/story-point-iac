@@ -1,6 +1,6 @@
 import {JoinRoomRequest} from "./util/JoinRoomRequest";
 import {
-  closeConnection,
+  closeConnection, ConnectionQueryResponse,
   ok,
   RoomQueryResponse,
   RoomStatus,
@@ -83,15 +83,17 @@ export async function handler(event: any) {
       }
     }));
 
-    // Fetch all participants
-    const participantsResult = await docClient.send(new QueryCommand({
-      TableName: ROOM_PARTICIPANTS_TABLE,
+    // Fetch all active connections in the room
+    const connectionsResult = await docClient.send(new QueryCommand({
+      TableName: WS_CONNECTIONS_TABLE,
+      IndexName: WS_CONNECTIONS_TABLE_INDEX,
       KeyConditionExpression: "roomId = :roomId",
       ExpressionAttributeValues: {
         ":roomId": joinRoomRequest.roomId
       }
     }));
-    const players = participantsResult.Items?.map(p => p.username) ?? [];
+    const connections = connectionsResult.Items as ConnectionQueryResponse[] ?? [];
+    const players = [...new Set(connections.map(connection => connection.username))];
 
     // Fetch all stories
     const storiesResult = await docClient.send(new QueryCommand({
@@ -117,17 +119,6 @@ export async function handler(event: any) {
       }));
       votes = votesResult.Items as VotesQueryResponse[] ?? [];
     }
-
-    // Fetch all active connections in the room
-    const connectionsResult = await docClient.send(new QueryCommand({
-      TableName: WS_CONNECTIONS_TABLE,
-      IndexName: WS_CONNECTIONS_TABLE_INDEX,
-      KeyConditionExpression: "roomId = :roomId",
-      ExpressionAttributeValues: {
-        ":roomId": joinRoomRequest.roomId
-      }
-    }));
-    const connections = connectionsResult.Items ?? [];
 
     // Send the room state to the joining client
     await sendToConnection(connectionId, client, {

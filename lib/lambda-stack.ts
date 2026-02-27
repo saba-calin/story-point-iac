@@ -38,7 +38,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsTestLambda(constants);
 
     this.deployWsConnectLambda(constants);
-    this.deployWsDisconnectLambda(constants);
+    this.deployWsDisconnectLambda(constants, webSocketConnectionsTable);
     this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable, votesTable);
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
     this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
@@ -259,7 +259,10 @@ export class LambdaStack extends cdk.Stack {
     });
   }
 
-  private deployWsDisconnectLambda(constants: Constants) {
+  private deployWsDisconnectLambda(
+    constants: Constants,
+    webSocketConnectionsTable: dynamodb.TableV2
+  ) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-disconnect');
 
     const wsDisconnectLambda = new lambda.Function(this, 'WsDisconnect', {
@@ -270,8 +273,14 @@ export class LambdaStack extends cdk.Stack {
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/ws-disconnect/dist/ws-disconnect'),
       memorySize: constants.lambda_memory_size,
-      logGroup: logGroup
+      logGroup: logGroup,
+      environment: {
+        WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+        WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+      }
     });
+
+    webSocketConnectionsTable.grantReadWriteData(wsDisconnectLambda);
 
     wsDisconnectLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['execute-api:ManageConnections'],

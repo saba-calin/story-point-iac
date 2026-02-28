@@ -110,13 +110,20 @@ export async function handler(event: any) {
     const activeStory = stories.find(story => story.status === StoryStatus.ACTIVE);
     let votes: VotesQueryResponse[] = [];
     if (activeStory) {
-      const votesResult = await docClient.send(new QueryCommand({
+      const queryParams: any = {
         TableName: VOTES_TABLE,
         KeyConditionExpression: "storyId = :storyId",
         ExpressionAttributeValues: {
           ":storyId": activeStory.storyId
         }
-      }));
+      }
+
+      // Filter out the voteValue if not already revealed
+      if (!activeStory.storyEstimation) {
+        queryParams.ProjectionExpression = "storyId, username";
+      }
+
+      const votesResult = await docClient.send(new QueryCommand(queryParams));
       votes = votesResult.Items as VotesQueryResponse[] ?? [];
     }
 

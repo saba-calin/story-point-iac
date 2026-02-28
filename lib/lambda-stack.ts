@@ -41,8 +41,9 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsDisconnectLambda(constants, webSocketConnectionsTable);
     this.deployWsJoinRoomLambda(constants, roomsTable, webSocketConnectionsTable, roomParticipantsTable, storiesTable, votesTable);
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
-    this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
+    this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
     this.deployWsVoteLambda(constants, roomsTable, storiesTable, votesTable, roomParticipantsTable, webSocketConnectionsTable);
+    this.deployWsRevealLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployChangePasswordLambda(constants, usersTable);
@@ -134,7 +135,7 @@ export class LambdaStack extends cdk.Stack {
     constants: Constants,
     roomsTable: dynamodb.TableV2,
     storiesTable: dynamodb.TableV2,
-    webSocketConnectionsTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-create-story');
 
@@ -170,7 +171,8 @@ export class LambdaStack extends cdk.Stack {
     constants: Constants,
     roomsTable: dynamodb.TableV2,
     storiesTable: dynamodb.TableV2,
-    webSocketConnectionsTable: dynamodb.TableV2,
+    votesTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-set-active-story');
 
@@ -186,6 +188,7 @@ export class LambdaStack extends cdk.Stack {
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
+        VOTES_TABLE: votesTable.tableName,
         WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
 
         WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
@@ -194,6 +197,7 @@ export class LambdaStack extends cdk.Stack {
 
     roomsTable.grantReadData(wsSetActiveStoryLambda);
     storiesTable.grantReadWriteData(wsSetActiveStoryLambda);
+    votesTable.grantReadData(wsSetActiveStoryLambda);
     webSocketConnectionsTable.grantReadWriteData(wsSetActiveStoryLambda);
 
     wsSetActiveStoryLambda.addToRolePolicy(new iam.PolicyStatement({
@@ -236,6 +240,45 @@ export class LambdaStack extends cdk.Stack {
     storiesTable.grantReadWriteData(wsVoteLambda);
     votesTable.grantReadWriteData(wsVoteLambda);
     roomParticipantsTable.grantReadWriteData(wsVoteLambda);
+    webSocketConnectionsTable.grantReadWriteData(wsVoteLambda);
+
+    wsVoteLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
+  }
+
+  private deployWsRevealLambda(
+    constants: Constants,
+    roomsTable: dynamodb.TableV2,
+    storiesTable: dynamodb.TableV2,
+    votesTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-reveal');
+
+    const wsVoteLambda = new lambda.Function(this, 'WsReveal', {
+      functionName: 'ws-reveal_lambda',
+      description: 'Lambda function that reveals the cards',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-reveal/dist/ws-reveal'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOMS_TABLE: roomsTable.tableName,
+        STORIES_TABLE: storiesTable.tableName,
+        VOTES_TABLE: votesTable.tableName,
+        WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+
+        WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+      }
+    });
+
+    roomsTable.grantReadData(wsVoteLambda);
+    storiesTable.grantReadWriteData(wsVoteLambda);
+    votesTable.grantReadWriteData(wsVoteLambda);
     webSocketConnectionsTable.grantReadWriteData(wsVoteLambda);
 
     wsVoteLambda.addToRolePolicy(new iam.PolicyStatement({

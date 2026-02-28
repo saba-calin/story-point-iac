@@ -6,7 +6,7 @@ import {
   sendErrorMessageToConnection, sendToConnection,
   StoryQueryResponse,
   StoryStatus,
-  UserContext
+  UserContext, VotesQueryResponse
 } from "../util";
 import {SetActiveStoryRequest} from "./util/SetActiveStoryRequest";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
@@ -18,6 +18,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 const ROOMS_TABLE = process.env.ROOMS_TABLE!;
 const STORIES_TABLE = process.env.STORIES_TABLE!;
+const VOTES_TABLE = process.env.VOTES_TABLE!;
 const WS_CONNECTIONS_TABLE = process.env.WS_CONNECTIONS_TABLE!;
 
 const WS_CONNECTIONS_TABLE_INDEX = process.env.WS_CONNECTIONS_TABLE_INDEX!;
@@ -73,6 +74,20 @@ export async function handler(event: any) {
       // no need to broadcast to users since it is already active
       return ok();
     }
+
+    // Fetch the votes for the story, if any
+    const queryParams: any = {
+      TableName: VOTES_TABLE,
+      KeyConditionExpression: "storyId = :storyId",
+      ExpressionAttributeValues: {
+        ":storyId": story.storyId
+      }
+    }
+    if (!story.storyEstimation) {
+      queryParams.ProjectionExpression = "storyId, username";
+    }
+    const votesResult = await docClient.send(new QueryCommand(queryParams));
+    const votes = votesResult.Items as VotesQueryResponse[] ?? [];
 
     const activeStoryResult = await docClient.send(new QueryCommand({
       TableName: STORIES_TABLE,
@@ -144,7 +159,8 @@ export async function handler(event: any) {
         story: {
           ...story,
           status: StoryStatus.ACTIVE
-        }
+        },
+        votes: votes
       }))
     );
 

@@ -21,6 +21,7 @@ export interface UserQueryResponse {
 }
 
 export const VALID_VOTES = ["1", "2", "3", "5", "8", "13", "21", "?"];
+export const VALID_ESTIMATES = ["1", "2", "3", "5", "8", "13", "21"];
 
 export enum StoryStatus {
   ACTIVE = "ACTIVE",
@@ -46,6 +47,7 @@ export interface StoryQueryResponse {
   name: string;
   description: string;
   status: StoryStatus;
+  storyEstimation: number
 }
 
 export interface VotesQueryResponse {

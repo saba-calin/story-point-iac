@@ -16,6 +16,7 @@
     "ws-create-story",
     "ws-set-active-story",
     "ws-vote",
+    "ws-reveal",
     "test",
     "ws-test"
   ],

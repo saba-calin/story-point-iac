@@ -71,6 +71,11 @@ export async function handler(event: any) {
       await closeConnection(connectionId, client);
       return ok();
     }
+    if (story.storyEstimation) {
+      await sendErrorMessageToConnection(connectionId, `Story with id ${voteRequest.storyId} has already been estimated`, client);
+      await closeConnection(connectionId, client);
+      return ok();
+    }
 
     const roomParticipantsResult = await docClient.send(new GetCommand({
       TableName: ROOM_PARTICIPANTS_TABLE,

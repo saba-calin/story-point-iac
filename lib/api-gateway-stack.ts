@@ -136,6 +136,22 @@ export class ApiGatewayStack extends cdk.Stack {
       authorizer: authorizer
     });
 
+    const getRoomLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetRoomLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetRoomLambda', 'get-room_lambda'));
+    httpApi.addRoutes({
+      path: '/rooms',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: getRoomLambdaIntegration,
+      authorizer: authorizer
+    });
+
+    const aiEstimateLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('AiEstimateLambdaIntegration', lambda.Function.fromFunctionName(this, 'AiEstimateLambda', 'ai-estimate_lambda'));
+    httpApi.addRoutes({
+      path: '/story/ai-estimate',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: aiEstimateLambdaIntegration,
+      authorizer: authorizer
+    });
+
     const cfnAuthorizer = httpApi.node.findChild('LambdaAuthorizer').node.defaultChild as apigwv2.CfnAuthorizer;
     cfnAuthorizer.authorizerPayloadFormatVersion = '2.0';
     cfnAuthorizer.enableSimpleResponses = false;

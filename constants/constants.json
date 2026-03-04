@@ -5,10 +5,13 @@
   "ws_domain_name": "ws.story-point.xyz",
   "root_certificate_arn_parameter": "root_certificate_arn_parameter",
   "jwt_secret_arn_parameter": "jwt_secret_arn_parameter",
+  "open_ai_key_secret_arn_parameter": "open_ai_key_secret_arn_parameter",
   "localhost_url": "http://localhost:5173",
   "root_url": "https://story-point.xyz",
   "ws_connections_table_index_name": "connectionIdsByRoom",
+  "room_participants_table_index_name": "roomsByUsername",
   "lambda_memory_size": 3008,
   "jwt_expiry_days": 1,
-  "password_salt_rounds": 10
+  "password_salt_rounds": 10,
+  "rooms_page_size": 10
 }

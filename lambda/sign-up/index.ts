@@ -2,7 +2,7 @@ import {SignUpRequest} from "./util/SignUpRequest";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, TransactWriteCommand} from "@aws-sdk/lib-dynamodb";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
-import {generateErrorResponse, getJwtSecret} from "../util";
+import {generateErrorResponse, getSecret} from "../util";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 
@@ -37,7 +37,7 @@ export async function handler(event: any) {
       return generateErrorResponse(400, "Password must be at least 8 characters");
     }
 
-    cachedJwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
+    cachedJwtSecret = await getSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
     const hashedPassword = await bcrypt.hash(signUpRequest.password, PASSWORD_SALT_ROUNDS);
 
     const userRecord = {

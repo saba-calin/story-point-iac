@@ -92,22 +92,25 @@ export function getCookieValue(cookieHeader: string, name: string) {
   return null;
 }
 
-export async function getJwtSecret(
-  cachedJwtSecret: string | null,
-  jwtSecretArn: string,
+export async function getSecret(
+  cachedSecret: string | null,
+  secretArn: string,
   secretsClient: SecretsManagerClient
 ): Promise<string> {
 
-  if (cachedJwtSecret) {
-    return cachedJwtSecret;
+  if (cachedSecret) {
+    console.log("using cached secret");
+    return cachedSecret;
   }
 
+  console.log("fetching secret...");
+
   const res = await secretsClient.send(
-    new GetSecretValueCommand({SecretId: jwtSecretArn})
+    new GetSecretValueCommand({SecretId: secretArn})
   );
 
-  cachedJwtSecret = res.SecretString!;
-  return cachedJwtSecret;
+  const parsedSecret = JSON.parse(res.SecretString!);
+  return parsedSecret.secret;
 }
 
 export async function sendErrorMessageToConnection(connectionId: string, message: string, client: ApiGatewayManagementApiClient) {

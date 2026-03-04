@@ -2,7 +2,7 @@ import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import {DynamoDBDocumentClient, GetCommand} from "@aws-sdk/lib-dynamodb";
 import {LogInRequest} from "./util/LogInRequest";
-import {generateErrorResponse, getJwtSecret, UserQueryResponse} from "../util";
+import {generateErrorResponse, getSecret, UserQueryResponse} from "../util";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 
@@ -43,7 +43,7 @@ export async function handler(event: any) {
       return generateErrorResponse(400, "Invalid credentials");
     }
 
-    cachedJwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
+    cachedJwtSecret = await getSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
     const expirationTime = 60 * 60 * 24 * JWT_EXPIRY_DAYS;
 
     const jwtToken = jwt.sign(

@@ -33,6 +33,8 @@ export class LambdaStack extends cdk.Stack {
 
     const jwtSecretArn = ssm.StringParameter.valueForStringParameter(this, constants.jwt_secret_arn_parameter);
     const jwtSecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'JwtSecret', jwtSecretArn);
+    const openAiKeySecretArn = ssm.StringParameter.valueForStringParameter(this, constants.open_ai_key_secret_arn_parameter);
+    const openAiKeySecret = secretsmanager.Secret.fromSecretCompleteArn(this, 'OpenAiKeySecret', openAiKeySecretArn);
 
     this.deployTestLambda(constants);
     this.deployWsTestLambda(constants);
@@ -46,8 +48,10 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsRevealLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
-    this.deployChangePasswordLambda(constants, usersTable);
+    this.deployGetRoomLambda(constants, roomParticipantsTable);
+    this.deployAiEstimateLambda(constants, openAiKeySecretArn, openAiKeySecret);
 
+    this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthMeLambda(constants);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
@@ -352,6 +356,56 @@ export class LambdaStack extends cdk.Stack {
     });
 
     roomsTable.grantReadWriteData(createRoomLambda);
+  }
+
+  private deployGetRoomLambda(
+    constants: Constants,
+    roomParticipantsTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-room');
+
+    const getRoomLambda = new lambda.Function(this, 'GetRoomLambda', {
+      functionName: 'get-room_lambda',
+      description: 'Lambda function that fetches paginated rooms where a user has participated based on username',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-room/dist/get-room'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOM_PARTICIPANTS_TABLE: roomParticipantsTable.tableName,
+        ROOM_PARTICIPANTS_TABLE_INDEX: constants.room_participants_table_index_name,
+
+        ROOMS_PAGE_SIZE: String(constants.rooms_page_size)
+      }
+    });
+
+    roomParticipantsTable.grantReadWriteData(getRoomLambda);
+  }
+
+  private deployAiEstimateLambda(
+    constants: Constants,
+    openAiKeySecretArn: string,
+    openAiKeySecret: ISecret
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ai-estimate');
+
+    const aiEstimateLambda = new lambda.Function(this, 'AiEstimateLambda', {
+      functionName: 'ai-estimate_lambda',
+      description: 'Lambda function that uses ChatGpt to estimate a story based on its name and description',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ai-estimate/dist/ai-estimate'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        OPEN_AI_SECRET_KEY_ARN: openAiKeySecretArn
+      }
+    });
+
+    openAiKeySecret.grantRead(aiEstimateLambda);
   }
 
   private deployChangePasswordLambda(

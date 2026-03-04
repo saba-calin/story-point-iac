@@ -1,4 +1,4 @@
-import {getCookieValue, getJwtSecret, UserContext} from "../util";
+import {getCookieValue, getSecret, UserContext} from "../util";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import * as jwt from "jsonwebtoken";
 
@@ -20,7 +20,7 @@ export async function handler(event: any, context: any, callback: any) {
       callback("Unauthorized", null);
     }
 
-    cachedJwtSecret = await getJwtSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
+    cachedJwtSecret = await getSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
 
     let payload: UserContext;
     try {

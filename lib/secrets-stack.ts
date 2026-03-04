@@ -23,5 +23,15 @@ export class SecretsStack extends cdk.Stack {
       parameterName: constants.jwt_secret_arn_parameter,
       stringValue: jwtSecret.secretArn
     });
+
+    // Must be set manually: {"secret": "sk-..."}
+    const openAiKeySecret = new secretsmanager.Secret(this, 'OpenAiKeySecret', {
+      secretName: 'open_ai_secret_key',
+      description: 'OpenAI key used to make requests to ChatGPT',
+    });
+    new ssm.StringParameter(this, 'OpenAiKeySecretArnParameter', {
+      parameterName: constants.open_ai_key_secret_arn_parameter,
+      stringValue: openAiKeySecret.secretArn
+    });
   }
 }

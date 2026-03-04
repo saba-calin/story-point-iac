@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib/core";
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import {AttributeType} from 'aws-cdk-lib/aws-dynamodb';
 
 export class DynamoStack extends cdk.Stack {
   public readonly usersTable: dynamodb.TableV2;
@@ -41,6 +42,13 @@ export class DynamoStack extends cdk.Stack {
       tableName: 'RoomParticipants',
       partitionKey: {name: 'roomId', type: dynamodb.AttributeType.STRING},
       sortKey: {name: 'username', type: dynamodb.AttributeType.STRING},
+      globalSecondaryIndexes: [
+        {
+          indexName: constants.room_participants_table_index_name,
+          partitionKey: {name: 'username', type: dynamodb.AttributeType.STRING},
+          sortKey: {name: 'joinedAt', type: AttributeType.NUMBER}
+        }
+      ],
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 

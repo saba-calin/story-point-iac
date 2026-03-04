@@ -79,7 +79,8 @@ export async function handler(event: any) {
       Item: {
         roomId: joinRoomRequest.roomId,
         username: userContext.username,
-        joinedAt: joinTime
+        joinedAt: joinTime,
+        ownerUsername: room.ownerUsername
       }
     }));
 

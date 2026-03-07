@@ -1,6 +1,6 @@
 import {
   closeConnection, ok, RoomQueryResponse, RoomStatus, sendErrorMessageToConnection, sendToConnection,
-  StoryQueryResponse, StoryStatus, UserContext, VALID_ESTIMATES, VotesQueryResponse
+  StoryQueryResponse, StoryStatus, UserContext, VALID_ESTIMATES, VoteQueryResponse
 } from "../util";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
@@ -82,7 +82,7 @@ export async function handler(event: any) {
         ":storyId": revealRequest.storyId
       }
     }));
-    const votes = votesResult.Items as VotesQueryResponse[] ?? [];
+    const votes = votesResult.Items as VoteQueryResponse[] ?? [];
 
     const storyEstimation = computeStoryEstimationValue(votes);
     const storyEstimationRounded = roundStoryEstimation(storyEstimation);
@@ -128,7 +128,7 @@ export async function handler(event: any) {
   }
 }
 
-function computeStoryEstimationValue(votes: VotesQueryResponse[]) {
+function computeStoryEstimationValue(votes: VoteQueryResponse[]) {
   if (votes.length === 0) {
     return "0";
   }

@@ -16,6 +16,7 @@ export async function handler(event: any) {
     const userContext = event.requestContext.authorizer.lambda as UserContext;
 
     const nextToken = event.queryStringParameters?.nextToken;
+    const limit = parseInt(event.queryStringParameters?.limit) || ROOMS_PAGE_SIZE;
     let exclusiveStartKey;
 
     if (nextToken) {
@@ -35,7 +36,7 @@ export async function handler(event: any) {
         ":username": userContext.username
       },
       ScanIndexForward: false,
-      Limit: ROOMS_PAGE_SIZE
+      Limit: limit
     }
     if (exclusiveStartKey) {
       queryParams.ExclusiveStartKey = exclusiveStartKey;

@@ -6,7 +6,7 @@ import {
   sendErrorMessageToConnection, sendToConnection,
   StoryQueryResponse,
   StoryStatus,
-  UserContext, VotesQueryResponse
+  UserContext, VoteQueryResponse
 } from "../util";
 import {SetActiveStoryRequest} from "./util/SetActiveStoryRequest";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
@@ -87,7 +87,7 @@ export async function handler(event: any) {
       queryParams.ProjectionExpression = "storyId, username";
     }
     const votesResult = await docClient.send(new QueryCommand(queryParams));
-    const votes = votesResult.Items as VotesQueryResponse[] ?? [];
+    const votes = votesResult.Items as VoteQueryResponse[] ?? [];
 
     const activeStoryResult = await docClient.send(new QueryCommand({
       TableName: STORIES_TABLE,

@@ -11,6 +11,8 @@
     "change-password",
     "create-room",
     "get-room",
+    "get-story",
+    "get-vote",
     "ai-estimate",
     "ws-connect",
     "ws-disconnect",

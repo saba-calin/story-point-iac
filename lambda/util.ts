@@ -50,7 +50,7 @@ export interface StoryQueryResponse {
   storyEstimation: number
 }
 
-export interface VotesQueryResponse {
+export interface VoteQueryResponse {
   storyId: string,
   username: string,
   voteValue: string

@@ -49,6 +49,8 @@ export class LambdaStack extends cdk.Stack {
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployGetRoomLambda(constants, roomParticipantsTable);
+    this.deployGetStoryLambda(constants, storiesTable);
+    this.deployGetVoteLambda(constants, votesTable);
     this.deployAiEstimateLambda(constants, openAiKeySecretArn, openAiKeySecret);
 
     this.deployChangePasswordLambda(constants, usersTable);
@@ -382,6 +384,52 @@ export class LambdaStack extends cdk.Stack {
     });
 
     roomParticipantsTable.grantReadWriteData(getRoomLambda);
+  }
+
+  private deployGetStoryLambda(
+    constants: Constants,
+    storiesTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-story');
+
+    const getStoryLambda = new lambda.Function(this, 'GetStoryLambda', {
+      functionName: 'get-story_lambda',
+      description: 'Lambda function that retrieves stories based on a given room id',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-story/dist/get-story'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        STORIES_TABLE: storiesTable.tableName,
+      }
+    });
+
+    storiesTable.grantReadWriteData(getStoryLambda);
+  }
+
+  private deployGetVoteLambda(
+    constants: Constants,
+    votesTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-vote');
+
+    const getVoteLambda = new lambda.Function(this, 'GetVoteLambda', {
+      functionName: 'get-vote_lambda',
+      description: 'Lambda function that retrieves votes based on a given story id',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-vote/dist/get-vote'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        VOTES_TABLE: votesTable.tableName,
+      }
+    });
+
+    votesTable.grantReadWriteData(getVoteLambda);
   }
 
   private deployAiEstimateLambda(

@@ -8,7 +8,7 @@ import {
   sendToConnection,
   StoryQueryResponse,
   StoryStatus,
-  UserContext, VotesQueryResponse
+  UserContext, VoteQueryResponse
 } from "../util";
 import {ApiGatewayManagementApiClient} from "@aws-sdk/client-apigatewaymanagementapi";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
@@ -80,7 +80,8 @@ export async function handler(event: any) {
         roomId: joinRoomRequest.roomId,
         username: userContext.username,
         joinedAt: joinTime,
-        ownerUsername: room.ownerUsername
+        ownerUsername: room.ownerUsername,
+        roomName: room.name
       }
     }));
 
@@ -109,7 +110,7 @@ export async function handler(event: any) {
 
     // Fetch all votes for the active story, if any
     const activeStory = stories.find(story => story.status === StoryStatus.ACTIVE);
-    let votes: VotesQueryResponse[] = [];
+    let votes: VoteQueryResponse[] = [];
     if (activeStory) {
       const queryParams: any = {
         TableName: VOTES_TABLE,
@@ -125,7 +126,7 @@ export async function handler(event: any) {
       }
 
       const votesResult = await docClient.send(new QueryCommand(queryParams));
-      votes = votesResult.Items as VotesQueryResponse[] ?? [];
+      votes = votesResult.Items as VoteQueryResponse[] ?? [];
     }
 
     // Send the room state to the joining client

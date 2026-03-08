@@ -2,8 +2,13 @@ name: Deploy CDK Stacks
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        default: 'master'
+        required: true
 
 jobs:
   deploy:

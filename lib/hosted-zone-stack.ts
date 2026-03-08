@@ -8,6 +8,7 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import {Constants} from "../constants/constants";
 
 export class HostedZoneStack extends cdk.Stack {
+
   public readonly apiCustomDomainName: apigwv2.DomainName;
   public readonly wsCustomDomainName: apigwv2.DomainName;
 
@@ -27,6 +28,7 @@ export class HostedZoneStack extends cdk.Stack {
       domainName: constants.root_domain_name,
       subjectAlternativeNames:[
         constants.www_domain_name,
+        constants.cdn_domain_name,
         constants.api_domain_name,
         constants.ws_domain_name
       ],

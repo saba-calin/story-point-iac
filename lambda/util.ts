@@ -18,6 +18,7 @@ export interface UserQueryResponse {
   username: string;
   email: string;
   password: string;
+  profilePictureKey: string;
 }
 
 export const VALID_VOTES = ["1", "2", "3", "5", "8", "13", "21", "?"];
@@ -141,3 +142,9 @@ export function ok() {
     statusCode: 200
   };
 }
+
+export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
+  "image/jpg": ".jpg",
+  "image/jpeg": ".jpeg",
+  "image/png": ".png"
+};

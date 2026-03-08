@@ -67,7 +67,8 @@ export async function handler(event: any) {
           username: user.username,
           email: user.email,
           firstName: user.firstName,
-          lastName: user.lastName
+          lastName: user.lastName,
+          profilePictureKey: user.profilePictureKey
         }
       }),
       headers: {

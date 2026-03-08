@@ -3,6 +3,7 @@ import {RemovalPolicy} from "aws-cdk-lib/core";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
@@ -26,6 +27,8 @@ export class LambdaStack extends cdk.Stack {
     storiesTable: dynamodb.TableV2,
     votesTable: dynamodb.TableV2,
 
+    cdnBucket: s3.Bucket,
+
     props?: cdk.StackProps
   ) {
 
@@ -45,6 +48,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsCreateStoryLambda(constants, roomsTable, storiesTable, webSocketConnectionsTable);
     this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
     this.deployWsVoteLambda(constants, roomsTable, storiesTable, votesTable, roomParticipantsTable, webSocketConnectionsTable);
+    this.deployGetAvatarUploadUrlLambda(constants, usersTable, cdnBucket);
     this.deployWsRevealLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
@@ -54,7 +58,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployAiEstimateLambda(constants, openAiKeySecretArn, openAiKeySecret);
 
     this.deployChangePasswordLambda(constants, usersTable);
-    this.deployAuthMeLambda(constants);
+    this.deployAuthMeLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
     this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
@@ -432,6 +436,33 @@ export class LambdaStack extends cdk.Stack {
     votesTable.grantReadWriteData(getVoteLambda);
   }
 
+  private deployGetAvatarUploadUrlLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    cdnBucket: s3.Bucket
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-avatar-upload-url');
+
+    const getAvatarUploadUrlLambda = new lambda.Function(this, 'GetAvatarUploadUrlLambda', {
+      functionName: 'get-avatar-upload-url_lambda',
+      description: 'Lambda function that generates a signed url that allows the user to upload a profile image',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-avatar-upload-url/dist/get-avatar-upload-url'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        MAX_IMAGE_SIZE_BYTES: String(constants.max_image_size_bytes),
+        CDN_BUCKET_NAME: cdnBucket.bucketName
+      }
+    });
+
+    usersTable.grantReadWriteData(getAvatarUploadUrlLambda);
+    cdnBucket.grantPut(getAvatarUploadUrlLambda);
+  }
+
   private deployAiEstimateLambda(
     constants: Constants,
     openAiKeySecretArn: string,
@@ -480,10 +511,13 @@ export class LambdaStack extends cdk.Stack {
     usersTable.grantReadWriteData(changePasswordLambda);
   }
 
-  private deployAuthMeLambda(constants: Constants) {
+  private deployAuthMeLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2
+  ) {
     const logGroup = this.createLambdaFunctionLogGroup('auth-me');
 
-    new lambda.Function(this, 'AuthMeLambda', {
+    const authMeLambda =  new lambda.Function(this, 'AuthMeLambda', {
       functionName: 'auth-me_lambda',
       description: 'Lambda function that returns the credentials of a logged in user',
       architecture: lambda.Architecture.ARM_64,
@@ -491,8 +525,13 @@ export class LambdaStack extends cdk.Stack {
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/auth-me/dist/auth-me'),
       memorySize: constants.lambda_memory_size,
-      logGroup: logGroup
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName
+      }
     });
+
+    usersTable.grantReadData(authMeLambda);
   }
 
   private deployAuthorizerLambda(

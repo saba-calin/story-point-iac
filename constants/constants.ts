@@ -16,6 +16,7 @@ export class Constants {
   public readonly jwt_expiry_days: number;
   public readonly password_salt_rounds: number;
   public readonly rooms_page_size: number;
+  public readonly max_image_size_bytes: number;
 
   constructor(constantsFile: any) {
     this.root_domain_name = constantsFile.root_domain_name;
@@ -34,5 +35,6 @@ export class Constants {
     this.jwt_expiry_days = constantsFile.jwt_expiry_days;
     this.password_salt_rounds = constantsFile.password_salt_rounds;
     this.rooms_page_size = constantsFile.rooms_page_size;
+    this.max_image_size_bytes = constantsFile.max_image_size_bytes;
   }
 }

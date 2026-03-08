@@ -47,7 +47,9 @@ export async function handler(event: any) {
     await docClient.send(
       new UpdateCommand({
         TableName: USERS_TABLE,
-        Key: {username: userContext.username},
+        Key: {
+          username: userContext.username
+        },
         UpdateExpression: "SET password = :password",
         ExpressionAttributeValues: {
           ":password": hashedPassword

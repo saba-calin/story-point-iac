@@ -152,7 +152,7 @@ export class ApiGatewayStack extends cdk.Stack {
       authorizer: authorizer
     });
 
-    const getStoryLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetStoryLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetStoryLambdaIntegration', 'get-story_lambda'));
+    const getStoryLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetStoryLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetStoryLambda', 'get-story_lambda'));
     httpApi.addRoutes({
       path: '/rooms/{roomId}/stories',
       methods: [apigwv2.HttpMethod.GET],
@@ -160,11 +160,19 @@ export class ApiGatewayStack extends cdk.Stack {
       authorizer: authorizer
     });
 
-    const getVoteLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetVoteLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetVoteLambdaIntegration', 'get-vote_lambda'));
+    const getVoteLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetVoteLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetVoteLambda', 'get-vote_lambda'));
     httpApi.addRoutes({
       path: '/stories/{storyId}/votes',
       methods: [apigwv2.HttpMethod.GET],
       integration: getVoteLambdaIntegration,
+      authorizer: authorizer
+    });
+
+    const getAvatarUploadUrlLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetAvatarUploadUrlLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetAvatarUploadUrlLambda', 'get-avatar-upload-url_lambda'));
+    httpApi.addRoutes({
+      path: '/users/me/avatar/upload-url',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: getAvatarUploadUrlLambdaIntegration,
       authorizer: authorizer
     });
 

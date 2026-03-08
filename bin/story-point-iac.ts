@@ -10,6 +10,7 @@ import {LambdaStack} from "../lib/lambda-stack";
 import {ApiGatewayStack} from "../lib/api-gateway-stack";
 import {SecretsStack} from "../lib/secrets-stack";
 import {WsApiStack} from "../lib/ws-api-stack";
+import {StorageStack} from "../lib/storage-stack";
 
 const app = new cdk.App();
 const env = {
@@ -34,6 +35,11 @@ new FrontendStack(app, 'FrontendStack', constants, {
   description: 'Stack used to create the buckets and cloudfront distributions for the frontend'
 });
 
+const storageStack = new StorageStack(app, 'StorageStack', constants, {
+  env: env,
+  description: 'Stack used to create the bucket and cloudfront distribution used for the user profile images'
+});
+
 const dynamoStack = new DynamoStack(app, 'DynamoStack', constants, {
   env: env,
   description: 'Stack used to create the DynamoDB tables'
@@ -47,6 +53,7 @@ new LambdaStack(app, 'LambdaStack', constants,
   dynamoStack.webSocketConnectionsTable,
   dynamoStack.storiesTable,
   dynamoStack.votesTable,
+  storageStack.cdnBucket,
   {
     env: env,
     description: 'Stack used to create all Lambda functions'

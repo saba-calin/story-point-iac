@@ -95,7 +95,8 @@ export async function handler(event: any) {
           username: userRecord.username,
           email: userRecord.email,
           firstName: userRecord.firstName,
-          lastName: userRecord.lastName
+          lastName: userRecord.lastName,
+          profilePictureKey: null
         }
       }),
       headers: {

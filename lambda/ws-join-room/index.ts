@@ -96,7 +96,10 @@ export async function handler(event: any) {
       }
     }));
     const connections = connectionsResult.Items as ConnectionQueryResponse[] ?? [];
-    const players = [...new Set(connections.map(connection => connection.username))];
+    const players = connections.map(connection => ({
+      username: connection.username,
+      profilePictureKey: connection.profilePictureKey
+    }));
 
     // Fetch all stories
     const storiesResult = await docClient.send(new QueryCommand({
@@ -145,7 +148,8 @@ export async function handler(event: any) {
         .map(c => sendToConnection(c.connectionId, client, {
           action: "playerJoined",
           player: {
-            username: userContext.username
+            username: userContext.username,
+            profilePictureKey: joinRoomRequest.profilePictureKey
           }
         }))
     );

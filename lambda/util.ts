@@ -61,7 +61,8 @@ export interface ConnectionQueryResponse {
   connectionId: string,
   joinedAt: number,
   roomId: string,
-  username: string
+  username: string,
+  profilePictureKey: string
 }
 
 export function generateErrorResponse(statusCode: number, message: string) {

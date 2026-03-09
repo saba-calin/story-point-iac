@@ -69,7 +69,8 @@ export async function handler(event: any) {
         connectionId: connectionId,
         roomId: joinRoomRequest.roomId,
         username: userContext.username,
-        joinedAt: joinTime
+        joinedAt: joinTime,
+        profilePictureKey: joinRoomRequest.profilePictureKey
       }
     }));
 

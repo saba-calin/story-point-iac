@@ -6,6 +6,7 @@
   "workspaces": [
     "sign-up",
     "log-in",
+    "log-out",
     "auth-me",
     "authorizer",
     "change-password",

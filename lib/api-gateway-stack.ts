@@ -104,6 +104,14 @@ export class ApiGatewayStack extends cdk.Stack {
       identitySource: ['$request.header.cookie']
     });
 
+    const logOutLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('LogOutLambdaIntegration', lambda.Function.fromFunctionName(this, 'LogOutLambda', 'log-out_lambda'));
+    httpApi.addRoutes({
+      path: '/auth/log-out',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: logOutLambdaIntegration,
+      authorizer: authorizer
+    });
+
     const testLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('TestLambdaIntegration', lambda.Function.fromFunctionName(this, 'TestLambda', 'test_lambda'));
     httpApi.addRoutes({
       path: '/test',

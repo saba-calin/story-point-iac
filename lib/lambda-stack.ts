@@ -61,6 +61,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployAuthMeLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
     this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
+    this.deployLogOutLambda(constants);
     this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
   }
 
@@ -585,6 +586,24 @@ export class LambdaStack extends cdk.Stack {
 
     jwtSecret.grantRead(logInLambda);
     usersTable.grantReadData(logInLambda);
+  }
+
+  private deployLogOutLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('log-out');
+
+    new lambda.Function(this, 'LogOutLambda', {
+      functionName: 'log-out_lambda',
+      description: 'Lambda function that handles the logout of the users',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/log-out/dist/log-out'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOT_DOMAIN: constants.root_domain_name
+      }
+    });
   }
 
   private deploySignUpLambda(

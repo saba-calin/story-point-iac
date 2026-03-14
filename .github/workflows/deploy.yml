@@ -59,6 +59,11 @@ jobs:
           cdk synth SecretsStack
           cdk deploy --require-approval never SecretsStack
 
+      - name: Deploy KMS Stack
+        run: |
+          cdk synth KmsStack
+          cdk deploy --require-approval never KmsStack
+
       - name: Deploy Frontend Stack
         run: |
           cdk synth FrontendStack

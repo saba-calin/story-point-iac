@@ -17,6 +17,7 @@ export async function handler(event: any) {
       },
       cookies: [
         `jwt=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0; Domain=.${ROOT_DOMAIN}`
+        // `jwt=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0; Domain=.${ROOT_DOMAIN}`
       ]
     };
 

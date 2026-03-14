@@ -171,7 +171,7 @@ export class ApiGatewayStack extends cdk.Stack {
 
     const getVoteLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetVoteLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetVoteLambda', 'get-vote_lambda'));
     httpApi.addRoutes({
-      path: '/stories/{storyId}/votes',
+      path: '/rooms/{roomId}/stories/{storyId}/votes',
       methods: [apigwv2.HttpMethod.GET],
       integration: getVoteLambdaIntegration,
       authorizer: authorizer

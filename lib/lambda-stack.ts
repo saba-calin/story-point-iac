@@ -56,7 +56,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployGetRoomLambda(constants, roomParticipantsTable);
     this.deployGetStoryLambda(constants, storiesTable);
-    this.deployGetVoteLambda(constants, votesTable);
+    this.deployGetVoteLambda(constants, storiesTable, votesTable);
     this.deployAiEstimateLambda(constants, openAiKeySecretArn, openAiKeySecret);
     this.deploySaveJiraTokenLambda(constants, usersTable, jiraTokenKey);
     this.deployGetJiraProjectsLambda(constants, usersTable, jiraTokenKey);
@@ -427,6 +427,7 @@ export class LambdaStack extends cdk.Stack {
 
   private deployGetVoteLambda(
     constants: Constants,
+    storiesTable: dynamodb.TableV2,
     votesTable: dynamodb.TableV2
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('get-vote');
@@ -441,10 +442,12 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
       environment: {
-        VOTES_TABLE: votesTable.tableName,
+        STORIES_TABLE: storiesTable.tableName,
+        VOTES_TABLE: votesTable.tableName
       }
     });
 
+    storiesTable.grantReadData(getVoteLambda);
     votesTable.grantReadWriteData(getVoteLambda);
   }
 

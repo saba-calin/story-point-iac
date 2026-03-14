@@ -23,10 +23,13 @@ export async function handler(event: any) {
       return generateErrorResponse(400, "User not found - this should never happen!");
     }
 
-    const {password, ...userWithoutPassword} = user;
+    const {password, jiraToken, jiraBaseUrl, jiraEmail, storyPointsFieldId, ...userWithoutSensibleInformation} = user;
     return {
       statusCode: 200,
-      body: JSON.stringify(userWithoutPassword),
+      body: JSON.stringify({
+        ...userWithoutSensibleInformation,
+        hasJiraAccess: !!jiraToken && !!jiraBaseUrl && !!jiraEmail && !!storyPointsFieldId
+      }),
       headers: {
         "Content-Type": "application/json"
       }

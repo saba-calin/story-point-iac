@@ -11,6 +11,7 @@ import {ApiGatewayStack} from "../lib/api-gateway-stack";
 import {SecretsStack} from "../lib/secrets-stack";
 import {WsApiStack} from "../lib/ws-api-stack";
 import {StorageStack} from "../lib/storage-stack";
+import {KmsStack} from "../lib/kms-stack";
 
 const app = new cdk.App();
 const env = {
@@ -27,7 +28,12 @@ const hostedZoneStack = new HostedZoneStack(app, 'HostedZoneStack', constants, {
 
 new SecretsStack(app, 'SecretsStack', constants, {
   env: env,
-  description: 'Stack used to create the secret keys use by the the application'
+  description: 'Stack used to create the secret keys used by the the application'
+});
+
+const kmsStack = new KmsStack(app, 'KmsStack', constants, {
+  env: env,
+  description: 'Stack used to create the KMS keys used by the application'
 });
 
 new FrontendStack(app, 'FrontendStack', constants, {
@@ -54,6 +60,7 @@ new LambdaStack(app, 'LambdaStack', constants,
   dynamoStack.storiesTable,
   dynamoStack.votesTable,
   storageStack.cdnBucket,
+  kmsStack.jiraTokenKey,
   {
     env: env,
     description: 'Stack used to create all Lambda functions'

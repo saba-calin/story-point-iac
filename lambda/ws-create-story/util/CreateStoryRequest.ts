@@ -3,4 +3,5 @@ export interface CreateStoryRequest {
     roomId: string;
     name: string;
     description: string;
+    issueKey?: string;
 }

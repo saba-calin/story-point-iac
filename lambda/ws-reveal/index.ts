@@ -1,15 +1,19 @@
 import {
   closeConnection, ok, RoomQueryResponse, RoomStatus, sendErrorMessageToConnection, sendToConnection,
-  StoryQueryResponse, StoryStatus, UserContext, VALID_ESTIMATES, VoteQueryResponse
+  StoryQueryResponse, StoryStatus, UserContext, UserQueryResponse, VALID_ESTIMATES, VoteQueryResponse
 } from "../util";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
 import {RevealRequest} from "./util/RevealRequest";
 import {ApiGatewayManagementApiClient} from "@aws-sdk/client-apigatewaymanagementapi";
+import {DecryptCommand, KMSClient} from "@aws-sdk/client-kms";
+import axios from "axios";
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
+const kmsClient = new KMSClient({});
 
+const USERS_TABLE = process.env.USERS_TABLE;
 const ROOMS_TABLE = process.env.ROOMS_TABLE!;
 const STORIES_TABLE = process.env.STORIES_TABLE!;
 const VOTES_TABLE = process.env.VOTES_TABLE!;
@@ -97,6 +101,42 @@ export async function handler(event: any) {
         ":storyEstimation": storyEstimationRounded
       }
     }));
+
+    if (story.issueKey) {
+      const userResponse = await docClient.send(new GetCommand({
+        TableName: USERS_TABLE,
+        Key: {
+          username: userContext.username
+        }
+      }));
+      const user = userResponse.Item as UserQueryResponse;
+
+      if (user.jiraToken && user.jiraEmail && user.jiraBaseUrl && user.storyPointsFieldId) {
+        const decrypted = await kmsClient.send(new DecryptCommand({
+          CiphertextBlob: Buffer.from(user.jiraToken, "base64")
+        }));
+        const jiraToken = new TextDecoder().decode(decrypted.Plaintext);
+
+        const credentials = Buffer.from(`${user.jiraEmail}:${jiraToken}`).toString("base64");
+        await axios.put(
+          `${user.jiraBaseUrl}/rest/api/3/issue/${story.issueKey}`,
+          {
+            fields: {
+              [user.storyPointsFieldId]: parseInt(storyEstimationRounded)
+            }
+          },
+          {
+            headers: {
+              "Authorization": `Basic ${credentials}`,
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            }
+          }
+        );
+
+        console.log(`Updated Jira issue ${story.issueKey} with ${storyEstimationRounded} story points`);
+      }
+    }
 
     const connectionsResult = await docClient.send(new QueryCommand({
       TableName: WS_CONNECTIONS_TABLE,

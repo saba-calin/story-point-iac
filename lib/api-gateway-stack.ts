@@ -33,7 +33,8 @@ export class ApiGatewayStack extends cdk.Stack {
         allowMethods: [
           apigwv2.CorsHttpMethod.OPTIONS,
           apigwv2.CorsHttpMethod.GET,
-          apigwv2.CorsHttpMethod.POST
+          apigwv2.CorsHttpMethod.POST,
+          apigwv2.CorsHttpMethod.PUT
         ],
         maxAge: Duration.seconds(0),
         allowHeaders: [
@@ -181,6 +182,30 @@ export class ApiGatewayStack extends cdk.Stack {
       path: '/users/me/avatar/upload-url',
       methods: [apigwv2.HttpMethod.GET],
       integration: getAvatarUploadUrlLambdaIntegration,
+      authorizer: authorizer
+    });
+
+    const saveJiraTokenLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('SaveJiraTokenLambdaIntegration', lambda.Function.fromFunctionName(this, 'SaveJiraTokenLambda', 'save-jira-token_lambda'));
+    httpApi.addRoutes({
+      path: '/users/jira-token',
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: saveJiraTokenLambdaIntegration,
+      authorizer: authorizer
+    });
+
+    const getJiraProjectsLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetJiraProjectsLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetJiraProjectsLambda', 'get-jira-projects_lambda'));
+    httpApi.addRoutes({
+      path: '/jira/projects',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: getJiraProjectsLambdaIntegration,
+      authorizer: authorizer
+    });
+
+    const getJiraStoriesLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetJiraStoriesLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetJiraStoriesLambda', 'get-jira-stories_lambda'));
+    httpApi.addRoutes({
+      path: '/jira/stories',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: getJiraStoriesLambdaIntegration,
       authorizer: authorizer
     });
 

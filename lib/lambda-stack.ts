@@ -8,6 +8,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import {Construct} from "constructs";
 import {Constants} from "../constants/constants";
 import {LogGroup, RetentionDays} from "aws-cdk-lib/aws-logs";
+import * as kms from "aws-cdk-lib/aws-kms";
 import {ISecret} from "aws-cdk-lib/aws-secretsmanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 
@@ -28,6 +29,7 @@ export class LambdaStack extends cdk.Stack {
     votesTable: dynamodb.TableV2,
 
     cdnBucket: s3.Bucket,
+    jiraTokenKey: kms.Key,
 
     props?: cdk.StackProps
   ) {
@@ -49,13 +51,16 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsSetActiveStoryLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
     this.deployWsVoteLambda(constants, roomsTable, storiesTable, votesTable, roomParticipantsTable, webSocketConnectionsTable);
     this.deployGetAvatarUploadUrlLambda(constants, usersTable, cdnBucket);
-    this.deployWsRevealLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
+    this.deployWsRevealLambda(constants, usersTable, roomsTable, storiesTable, votesTable, webSocketConnectionsTable, jiraTokenKey);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployGetRoomLambda(constants, roomParticipantsTable);
     this.deployGetStoryLambda(constants, storiesTable);
     this.deployGetVoteLambda(constants, votesTable);
     this.deployAiEstimateLambda(constants, openAiKeySecretArn, openAiKeySecret);
+    this.deploySaveJiraTokenLambda(constants, usersTable, jiraTokenKey);
+    this.deployGetJiraProjectsLambda(constants, usersTable, jiraTokenKey);
+    this.deployGetJiraStoriesLambda(constants, usersTable, jiraTokenKey);
 
     this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthMeLambda(constants, usersTable);
@@ -261,14 +266,16 @@ export class LambdaStack extends cdk.Stack {
 
   private deployWsRevealLambda(
     constants: Constants,
+    usersTable: dynamodb.TableV2,
     roomsTable: dynamodb.TableV2,
     storiesTable: dynamodb.TableV2,
     votesTable: dynamodb.TableV2,
-    webSocketConnectionsTable: dynamodb.TableV2
+    webSocketConnectionsTable: dynamodb.TableV2,
+    jiraTokenKey: kms.Key
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-reveal');
 
-    const wsVoteLambda = new lambda.Function(this, 'WsReveal', {
+    const wsRevealLambda = new lambda.Function(this, 'WsReveal', {
       functionName: 'ws-reveal_lambda',
       description: 'Lambda function that reveals the cards',
       architecture: lambda.Architecture.ARM_64,
@@ -278,6 +285,7 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
       environment: {
+        USERS_TABLE: usersTable.tableName,
         ROOMS_TABLE: roomsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
         VOTES_TABLE: votesTable.tableName,
@@ -287,12 +295,15 @@ export class LambdaStack extends cdk.Stack {
       }
     });
 
-    roomsTable.grantReadData(wsVoteLambda);
-    storiesTable.grantReadWriteData(wsVoteLambda);
-    votesTable.grantReadWriteData(wsVoteLambda);
-    webSocketConnectionsTable.grantReadWriteData(wsVoteLambda);
+    usersTable.grantReadData(wsRevealLambda);
+    roomsTable.grantReadData(wsRevealLambda);
+    storiesTable.grantReadWriteData(wsRevealLambda);
+    votesTable.grantReadWriteData(wsRevealLambda);
+    webSocketConnectionsTable.grantReadWriteData(wsRevealLambda);
 
-    wsVoteLambda.addToRolePolicy(new iam.PolicyStatement({
+    jiraTokenKey.grantDecrypt(wsRevealLambda);
+
+    wsRevealLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ['execute-api:ManageConnections'],
       resources: ['arn:aws:execute-api:*:*:*']
     }));
@@ -486,6 +497,82 @@ export class LambdaStack extends cdk.Stack {
     });
 
     openAiKeySecret.grantRead(aiEstimateLambda);
+  }
+
+  private deploySaveJiraTokenLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    jiraTokenKey: kms.Key
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('save-jira-token');
+
+    const saveJiraTokenLambda = new lambda.Function(this, 'SaveJiraTokenLambda', {
+      functionName: 'save-jira-token_lambda',
+      description: 'Lambda function that save the jira token for a user',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/save-jira-token/dist/save-jira-token'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        KMS_KEY_ID: jiraTokenKey.keyId
+      }
+    });
+
+    usersTable.grantReadWriteData(saveJiraTokenLambda);
+    jiraTokenKey.grantEncrypt(saveJiraTokenLambda);
+  }
+
+  private deployGetJiraProjectsLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    jiraTokenKey: kms.Key
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-jira-projects');
+
+    const getJiraProjectsLambda = new lambda.Function(this, 'GetJiraProjectsLambda', {
+      functionName: 'get-jira-projects_lambda',
+      description: 'Lambda function that fetches all projects for a user based on the jira API key',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-jira-projects/dist/get-jira-projects'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName
+      }
+    });
+
+    usersTable.grantReadWriteData(getJiraProjectsLambda);
+    jiraTokenKey.grantDecrypt(getJiraProjectsLambda);
+  }
+
+  private deployGetJiraStoriesLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    jiraTokenKey: kms.Key
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-jira-stories');
+
+    const getJiraStoriesLambda = new lambda.Function(this, 'GetJiraStoriesLambda', {
+      functionName: 'get-jira-stories_lambda',
+      description: 'Lambda function that fetches all stories for a project based on the jira API key',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-jira-stories/dist/get-jira-stories'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName
+      }
+    });
+
+    usersTable.grantReadWriteData(getJiraStoriesLambda);
+    jiraTokenKey.grantDecrypt(getJiraStoriesLambda);
   }
 
   private deployChangePasswordLambda(

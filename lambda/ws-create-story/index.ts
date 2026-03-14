@@ -62,7 +62,8 @@ export async function handler(event: any) {
       storyId: uuidv7(),
       name: createStoryRequest.name,
       description: createStoryRequest.description,
-      status: StoryStatus.NON_ACTIVE
+      status: StoryStatus.NON_ACTIVE,
+      ...(createStoryRequest.issueKey && {issueKey: createStoryRequest.issueKey})
     }
     await docClient.send(new PutCommand({
       TableName: STORIES_TABLE,
@@ -79,10 +80,11 @@ export async function handler(event: any) {
     }));
     const connections = connectionsResult.Items?.map(c => c.connectionId) ?? [];
 
+    const {issueKey, ...storyForBroadcast} = storyRecord;
     await Promise.all(
       connections.map(connectionId => sendToConnection(connectionId, client, {
         action: "storyCreated",
-        story: storyRecord
+        story: storyForBroadcast
       }))
     );
 

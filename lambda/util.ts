@@ -19,6 +19,10 @@ export interface UserQueryResponse {
   email: string;
   password: string;
   profilePictureKey: string;
+  jiraToken: string;
+  jiraBaseUrl: string;
+  jiraEmail: string;
+  storyPointsFieldId: string;
 }
 
 export const VALID_VOTES = ["1", "2", "3", "5", "8", "13", "21", "?"];
@@ -48,7 +52,8 @@ export interface StoryQueryResponse {
   name: string;
   description: string;
   status: StoryStatus;
-  storyEstimation: number
+  storyEstimation: number;
+  issueKey: string;
 }
 
 export interface VoteQueryResponse {
@@ -148,4 +153,15 @@ export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   "image/jpg": ".jpg",
   "image/jpeg": ".jpeg",
   "image/png": ".png"
+};
+
+export const extractIssueDescription = (description: any): string | null => {
+  if (!description?.content) {
+    return null;
+  }
+
+  return description.content
+    .flatMap((block: any) => block.content ?? [])
+    .map((inline: any) => inline.text ?? "")
+    .join(" ") || null;
 };

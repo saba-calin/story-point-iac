@@ -96,7 +96,8 @@ export async function handler(event: any) {
           email: userRecord.email,
           firstName: userRecord.firstName,
           lastName: userRecord.lastName,
-          profilePictureKey: null
+          profilePictureKey: null,
+          hasJiraAccess: null
         }
       }),
       headers: {

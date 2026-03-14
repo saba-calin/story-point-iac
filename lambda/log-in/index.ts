@@ -68,7 +68,8 @@ export async function handler(event: any) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          profilePictureKey: user.profilePictureKey
+          profilePictureKey: user.profilePictureKey,
+          ...((user.jiraBaseUrl && user.jiraEmail && user.jiraToken && user.storyPointsFieldId) && {hasJiraAccess: true})
         }
       }),
       headers: {

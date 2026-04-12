@@ -52,6 +52,7 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsVoteLambda(constants, roomsTable, storiesTable, votesTable, roomParticipantsTable, webSocketConnectionsTable);
     this.deployGetAvatarUploadUrlLambda(constants, usersTable, cdnBucket);
     this.deployWsRevealLambda(constants, usersTable, roomsTable, storiesTable, votesTable, webSocketConnectionsTable, jiraTokenKey);
+    this.deployWsRevoteLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
     this.deployGetRoomLambda(constants, roomParticipantsTable);
@@ -308,6 +309,46 @@ export class LambdaStack extends cdk.Stack {
       resources: ['arn:aws:execute-api:*:*:*']
     }));
   }
+
+  private deployWsRevoteLambda(
+    constants: Constants,
+    roomsTable: dynamodb.TableV2,
+    storiesTable: dynamodb.TableV2,
+    votesTable: dynamodb.TableV2,
+    webSocketConnectionsTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ws-revote');
+
+    const wsRevealLambda = new lambda.Function(this, 'WsRevote', {
+      functionName: 'ws-revote_lambda',
+      description: 'Lambda function that triggers a revote',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ws-revote/dist/ws-revote'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        ROOMS_TABLE: roomsTable.tableName,
+        STORIES_TABLE: storiesTable.tableName,
+        VOTES_TABLE: votesTable.tableName,
+        WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
+
+        WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
+      }
+    });
+
+    roomsTable.grantReadData(wsRevealLambda);
+    storiesTable.grantReadWriteData(wsRevealLambda);
+    votesTable.grantReadWriteData(wsRevealLambda);
+    webSocketConnectionsTable.grantReadWriteData(wsRevealLambda);
+
+    wsRevealLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['execute-api:ManageConnections'],
+      resources: ['arn:aws:execute-api:*:*:*']
+    }));
+  }
+
 
   private deployWsConnectLambda(constants: Constants) {
     const logGroup = this.createLambdaFunctionLogGroup('ws-connect');

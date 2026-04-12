@@ -83,9 +83,9 @@ export async function handler(event: any) {
         ":storyId": story.storyId
       }
     }
-    if (!story.storyEstimation) {
-      queryParams.ProjectionExpression = "storyId, username";
-    }
+    // if (!story.storyEstimation) {
+    //   queryParams.ProjectionExpression = "storyId, username";
+    // }
     const votesResult = await docClient.send(new QueryCommand(queryParams));
     const votes = votesResult.Items as VoteQueryResponse[] ?? [];
 
@@ -151,17 +151,24 @@ export async function handler(event: any) {
         ":roomId": setActiveStoryRequest.roomId
       }
     }));
-    const connections = connectionsResult.Items?.map(c => c.connectionId) ?? [];
+    const connections = connectionsResult.Items ?? [];
+
+    const maskedVotes = votes.map(vote => ({ ...vote, voteValue: null }));
+    const voteIndexByUsername = new Map(votes.map((vote, i) => [vote.username, i]));
 
     await Promise.all(
-      connections.map(connectionId => sendToConnection(connectionId, client, {
-        action: "storySetActive",
-        story: {
-          ...story,
-          status: StoryStatus.ACTIVE
-        },
-        votes: votes
-      }))
+      connections.map(conn => {
+        const idx = voteIndexByUsername.get(conn.username);
+        const personalVotes = idx !== undefined
+          ? [...maskedVotes.slice(0, idx), votes[idx], ...maskedVotes.slice(idx + 1)]
+          : maskedVotes;
+
+        return sendToConnection(conn.connectionId, client, {
+          action: "storySetActive",
+          story: {...story, status: StoryStatus.ACTIVE},
+          votes: personalVotes
+        });
+      })
     );
 
     return ok();

@@ -125,9 +125,9 @@ export async function handler(event: any) {
       }
 
       // Filter out the voteValue if not already revealed
-      if (!activeStory.storyEstimation) {
-        queryParams.ProjectionExpression = "storyId, username";
-      }
+      // if (!activeStory.storyEstimation) {
+      //   queryParams.ProjectionExpression = "storyId, username";
+      // }
 
       const votesResult = await docClient.send(new QueryCommand(queryParams));
       votes = votesResult.Items as VoteQueryResponse[] ?? [];
@@ -139,7 +139,7 @@ export async function handler(event: any) {
       room: room,
       players: players,
       stories: stories,
-      votes: votes
+      votes: votes.map(vote => vote.username === userContext.username ? vote : {...vote, voteValue: null})
     });
 
     await Promise.all(

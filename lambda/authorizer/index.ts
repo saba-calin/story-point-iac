@@ -14,7 +14,7 @@ export async function handler(event: any, context: any, callback: any) {
     const cookieHeader = event.headers.cookie || event.headers.Cookie;
     const invokedResource = event.routeArn || event.methodArn;
 
-    const token = getCookieValue(cookieHeader, "jwt");
+    const token = getCookieValue(cookieHeader, "sp-access");
     if (!token) {
       console.warn("No JWT Cookie provided");
       callback("Unauthorized", null);

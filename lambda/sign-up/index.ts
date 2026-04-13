@@ -1,10 +1,11 @@
 import {SignUpRequest} from "./util/SignUpRequest";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
-import {DynamoDBDocumentClient, TransactWriteCommand} from "@aws-sdk/lib-dynamodb";
+import {DynamoDBDocumentClient, PutCommand, TransactWriteCommand} from "@aws-sdk/lib-dynamodb";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import {generateErrorResponse, getSecret} from "../util";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
+import {createHash, randomBytes} from "node:crypto";
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -12,10 +13,14 @@ const secretsClient = new SecretsManagerClient({});
 
 const USERS_TABLE = process.env.USERS_TABLE!;
 const USER_EMAILS_TABLE = process.env.USER_EMAILS_TABLE!;
+const REFRESH_TOKENS_TABLE = process.env.REFRESH_TOKENS_TABLE!;
+
 const JWT_SECRET_ARN = process.env.JWT_SECRET_ARN!;
-const JWT_EXPIRY_DAYS = Number(process.env.JWT_EXPIRY_DAYS!);
-const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS!);
 const ROOT_DOMAIN = process.env.ROOT_DOMAIN!;
+const PASSWORD_SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS!);
+
+const ACCESS_TOKEN_EXPIRY_MINUTES = Number(process.env.ACCESS_TOKEN_EXPIRY_MINUTES!);
+const REFRESH_TOKEN_EXPIRY_DAYS = Number(process.env.REFRESH_TOKEN_EXPIRY_DAYS!);
 
 let cachedJwtSecret: string | null = null;
 
@@ -73,8 +78,8 @@ export async function handler(event: any) {
       })
     );
 
-    const expirationTime = 60 * 60 * 24 * JWT_EXPIRY_DAYS;
-    const jwtToken = jwt.sign(
+    const accessTokenDuration = 60 * ACCESS_TOKEN_EXPIRY_MINUTES;
+    const accessToken = jwt.sign(
       {
         username: userRecord.username,
         email: userRecord.email,
@@ -83,19 +88,36 @@ export async function handler(event: any) {
       },
       cachedJwtSecret,
       {
-        expiresIn: expirationTime
+        expiresIn: accessTokenDuration
       }
     );
+
+    const refreshToken = randomBytes(64).toString("base64url");
+    const refreshTokenHash = createHash("sha256").update(refreshToken).digest("hex");
+    const refreshTokenDuration = 60 * 60 * 24 * REFRESH_TOKEN_EXPIRY_DAYS;
+
+    const now = Date.now();
+    await docClient.send(new PutCommand({
+      TableName: REFRESH_TOKENS_TABLE,
+      Item: {
+        refreshTokenHash,
+        username: userRecord.username,
+        createdAt: now,
+        expiresAt: now + refreshTokenDuration * 1000,
+        ttl: Math.floor(now / 1000) + refreshTokenDuration
+      }
+    }));
 
     return {
       statusCode: 201,
       body: JSON.stringify({
         message: "User created successfully",
-        user: {
+        userContext: {
           username: userRecord.username,
           email: userRecord.email,
           firstName: userRecord.firstName,
           lastName: userRecord.lastName,
+          accessTokenDuration: accessTokenDuration,
           profilePictureKey: null,
           hasJiraAccess: null
         }
@@ -104,8 +126,10 @@ export async function handler(event: any) {
         "Content-Type": "application/json"
       },
       cookies: [
-        `jwt=${jwtToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${expirationTime} Domain=.${ROOT_DOMAIN}`
-        // `jwt=${jwtToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${expirationTime}; Domain=.${ROOT_DOMAIN}`
+        `sp-access=${accessToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${accessTokenDuration}; Domain=.${ROOT_DOMAIN}`,
+        `sp-refresh=${refreshToken}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${refreshTokenDuration}; Domain=.${ROOT_DOMAIN}`
+        // `sp-access=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${accessTokenDuration}; Domain=.${ROOT_DOMAIN}`,
+        // `sp-refresh=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${refreshTokenDuration}; Domain=.${ROOT_DOMAIN}`
       ]
     };
 

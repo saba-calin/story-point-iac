@@ -12,8 +12,10 @@ export class Constants {
   public readonly root_url: string;
   public readonly ws_connections_table_index_name: string;
   public readonly room_participants_table_index_name: string;
+  public readonly refresh_tokens_table_index_name: string;
   public readonly lambda_memory_size: number;
-  public readonly jwt_expiry_days: number;
+  public readonly access_token_expiry_minutes: number;
+  public readonly refresh_token_expiry_days: number;
   public readonly password_salt_rounds: number;
   public readonly rooms_page_size: number;
   public readonly max_image_size_bytes: number;
@@ -31,8 +33,10 @@ export class Constants {
     this.root_url = constantsFile.root_url;
     this.ws_connections_table_index_name = constantsFile.ws_connections_table_index_name;
     this.room_participants_table_index_name = constantsFile.room_participants_table_index_name;
+    this.refresh_tokens_table_index_name = constantsFile.refresh_tokens_table_index_name;
     this.lambda_memory_size = constantsFile.lambda_memory_size;
-    this.jwt_expiry_days = constantsFile.jwt_expiry_days;
+    this.access_token_expiry_minutes = constantsFile.access_token_expiry_minutes;
+    this.refresh_token_expiry_days = constantsFile.refresh_token_expiry_days;
     this.password_salt_rounds = constantsFile.password_salt_rounds;
     this.rooms_page_size = constantsFile.rooms_page_size;
     this.max_image_size_bytes = constantsFile.max_image_size_bytes;

@@ -59,6 +59,7 @@ new LambdaStack(app, 'LambdaStack', constants,
   dynamoStack.webSocketConnectionsTable,
   dynamoStack.storiesTable,
   dynamoStack.votesTable,
+  dynamoStack.refreshTokensTable,
   storageStack.cdnBucket,
   kmsStack.jiraTokenKey,
   {

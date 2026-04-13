@@ -46,6 +46,14 @@ export interface RoomQueryResponse {
   status: RoomStatus
 }
 
+export interface RefreshTokenQueryResponse {
+  refreshTokenHash: string;
+  username: string;
+  createdAt: number;
+  expiresAt: number;
+  ttl: number;
+}
+
 export interface StoryQueryResponse {
   roomId: string;
   storyId: string;

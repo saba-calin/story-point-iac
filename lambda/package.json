@@ -7,6 +7,7 @@
     "sign-up",
     "log-in",
     "log-out",
+    "refresh",
     "auth-me",
     "authorizer",
     "change-password",

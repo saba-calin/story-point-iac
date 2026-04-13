@@ -16,6 +16,8 @@ export class DynamoStack extends cdk.Stack {
   public readonly storiesTable: dynamodb.TableV2;
   public readonly votesTable: dynamodb.TableV2;
 
+  public readonly refreshTokensTable: dynamodb.TableV2;
+
   constructor(scope: Construct, id: string, constants: Constants, props?: cdk.StackProps) {
 
     super(scope, id, props);
@@ -79,6 +81,20 @@ export class DynamoStack extends cdk.Stack {
       tableName: 'VotesTable',
       partitionKey: {name: 'storyId', type: dynamodb.AttributeType.STRING},
       sortKey: {name: 'username', type: dynamodb.AttributeType.STRING},
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
+    // Refresh Tokens
+    this.refreshTokensTable = new dynamodb.TableV2(this, 'RefreshTokensTable', {
+      tableName: 'RefreshTokens',
+      partitionKey: {name: 'refreshTokenHash', type: dynamodb.AttributeType.STRING},
+      globalSecondaryIndexes: [
+        {
+          indexName: constants.refresh_tokens_table_index_name,
+          partitionKey: {name: 'username', type: AttributeType.STRING}
+        }
+      ],
+      timeToLiveAttribute: 'ttl',
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
   }

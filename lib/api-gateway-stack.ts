@@ -86,14 +86,14 @@ export class ApiGatewayStack extends cdk.Stack {
 
     const lambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('SignUpLambdaIntegration', lambda.Function.fromFunctionName(this, 'SignUpLambda', 'sign-up_lambda'));
     httpApi.addRoutes({
-      path: '/sign-up',
+      path: '/auth/sign-up',
       methods: [apigwv2.HttpMethod.POST],
       integration: lambdaIntegration
     });
 
     const logInLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('LogInLambdaIntegration', lambda.Function.fromFunctionName(this, 'LogInLambda', 'log-in_lambda'));
     httpApi.addRoutes({
-      path: '/log-in',
+      path: '/auth/log-in',
       methods: [apigwv2.HttpMethod.POST],
       integration: logInLambdaIntegration,
     });
@@ -109,8 +109,14 @@ export class ApiGatewayStack extends cdk.Stack {
     httpApi.addRoutes({
       path: '/auth/log-out',
       methods: [apigwv2.HttpMethod.POST],
-      integration: logOutLambdaIntegration,
-      authorizer: authorizer
+      integration: logOutLambdaIntegration
+    });
+
+    const refreshLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('RefreshLambdaIntegration', lambda.Function.fromFunctionName(this, 'RefreshLambda', 'refresh_lambda'));
+    httpApi.addRoutes({
+      path: '/auth/refresh',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: refreshLambdaIntegration
     });
 
     const testLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('TestLambdaIntegration', lambda.Function.fromFunctionName(this, 'TestLambda', 'test_lambda'));
@@ -123,7 +129,7 @@ export class ApiGatewayStack extends cdk.Stack {
 
     const changePasswordLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('ChangePasswordLambdaIntegration', lambda.Function.fromFunctionName(this, 'ChangePasswordLambda', 'change-password_lambda'));
     httpApi.addRoutes({
-      path: '/change-password',
+      path: '/auth/change-password',
       methods: [apigwv2.HttpMethod.POST],
       integration: changePasswordLambdaIntegration,
       authorizer: authorizer

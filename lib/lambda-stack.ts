@@ -25,8 +25,11 @@ export class LambdaStack extends cdk.Stack {
     roomParticipantsTable: dynamodb.TableV2,
 
     webSocketConnectionsTable: dynamodb.TableV2,
+
     storiesTable: dynamodb.TableV2,
     votesTable: dynamodb.TableV2,
+
+    refreshTokensTable: dynamodb.TableV2,
 
     cdnBucket: s3.Bucket,
     jiraTokenKey: kms.Key,
@@ -66,9 +69,10 @@ export class LambdaStack extends cdk.Stack {
     this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthMeLambda(constants, usersTable);
     this.deployAuthorizerLambda(constants, jwtSecretArn, jwtSecret);
-    this.deployLogInLambda(constants, usersTable, jwtSecretArn, jwtSecret);
-    this.deployLogOutLambda(constants);
-    this.deploySignUpLambda(constants, usersTable, userEmailsTable, jwtSecretArn, jwtSecret);
+    this.deployLogInLambda(constants, usersTable, refreshTokensTable, jwtSecretArn, jwtSecret);
+    this.deployLogOutLambda(constants, refreshTokensTable);
+    this.deploySignUpLambda(constants, usersTable, userEmailsTable, refreshTokensTable, jwtSecretArn, jwtSecret);
+    this.deployRefreshLambda(constants, refreshTokensTable, usersTable, jwtSecretArn, jwtSecret);
   }
 
   private deployTestLambda(constants: Constants) {
@@ -693,6 +697,7 @@ export class LambdaStack extends cdk.Stack {
   private deployLogInLambda(
     constants: Constants,
     usersTable: dynamodb.TableV2,
+    refreshTokensTable: dynamodb.TableV2,
     jwtSecretArn: string,
     jwtSecret: ISecret
   ) {
@@ -709,20 +714,26 @@ export class LambdaStack extends cdk.Stack {
       logGroup: logGroup,
       environment: {
         USERS_TABLE: usersTable.tableName,
+        REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
         JWT_SECRET_ARN: jwtSecretArn,
-        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days),
-        ROOT_DOMAIN: constants.root_domain_name
+        ROOT_DOMAIN: constants.root_domain_name,
+        ACCESS_TOKEN_EXPIRY_MINUTES: String(constants.access_token_expiry_minutes),
+        REFRESH_TOKEN_EXPIRY_DAYS: String(constants.refresh_token_expiry_days)
       }
     });
 
     jwtSecret.grantRead(logInLambda);
     usersTable.grantReadData(logInLambda);
+    refreshTokensTable.grantReadWriteData(logInLambda);
   }
 
-  private deployLogOutLambda(constants: Constants) {
+  private deployLogOutLambda(
+    constants: Constants,
+    refreshTokensTable: dynamodb.TableV2
+  ) {
     const logGroup = this.createLambdaFunctionLogGroup('log-out');
 
-    new lambda.Function(this, 'LogOutLambda', {
+    const logOutLambda = new lambda.Function(this, 'LogOutLambda', {
       functionName: 'log-out_lambda',
       description: 'Lambda function that handles the logout of the users',
       architecture: lambda.Architecture.ARM_64,
@@ -732,15 +743,19 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
       environment: {
+        REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
         ROOT_DOMAIN: constants.root_domain_name
       }
     });
+
+    refreshTokensTable.grantReadWriteData(logOutLambda);
   }
 
   private deploySignUpLambda(
     constants: Constants,
     usersTable: dynamodb.TableV2,
     userEmailsTable: dynamodb.TableV2,
+    refreshTokensTable: dynamodb.TableV2,
     jwtSecretArn: string,
     jwtSecret: ISecret
   ) {
@@ -758,16 +773,52 @@ export class LambdaStack extends cdk.Stack {
       environment: {
         USERS_TABLE: usersTable.tableName,
         USER_EMAILS_TABLE: userEmailsTable.tableName,
+        REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
         JWT_SECRET_ARN: jwtSecretArn,
-        JWT_EXPIRY_DAYS: String(constants.jwt_expiry_days),
+        ROOT_DOMAIN: constants.root_domain_name,
         PASSWORD_SALT_ROUNDS: String(constants.password_salt_rounds),
-        ROOT_DOMAIN: constants.root_domain_name
+        ACCESS_TOKEN_EXPIRY_MINUTES: String(constants.access_token_expiry_minutes),
+        REFRESH_TOKEN_EXPIRY_DAYS: String(constants.refresh_token_expiry_days)
       }
     });
 
     jwtSecret.grantRead(signUpLambda);
     usersTable.grantReadWriteData(signUpLambda);
     userEmailsTable.grantReadWriteData(signUpLambda);
+    refreshTokensTable.grantReadWriteData(signUpLambda);
+  }
+
+  private deployRefreshLambda(
+    constants: Constants,
+    refreshTokensTable: dynamodb.TableV2,
+    usersTable: dynamodb.TableV2,
+    jwtSecretArn: string,
+    jwtSecret: ISecret
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('refresh');
+
+    const refreshLambda = new lambda.Function(this, 'RefreshLambda', {
+      functionName: 'refresh_lambda',
+      description: 'Lambda function that issues a new access token based on the refresh token, which is rotated',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/refresh/dist/refresh'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
+        USERS_TABLE: usersTable.tableName,
+        JWT_SECRET_ARN: jwtSecretArn,
+        ROOT_DOMAIN: constants.root_domain_name,
+        ACCESS_TOKEN_EXPIRY_MINUTES: String(constants.access_token_expiry_minutes),
+        REFRESH_TOKEN_EXPIRY_DAYS: String(constants.refresh_token_expiry_days)
+      }
+    });
+
+    refreshTokensTable.grantReadWriteData(refreshLambda);
+    usersTable.grantReadWriteData(refreshLambda);
+    jwtSecret.grantRead(refreshLambda);
   }
 
   private createLambdaFunctionLogGroup(lambdaName: string) {

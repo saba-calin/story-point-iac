@@ -13,7 +13,7 @@ export async function handler(event: any) {
   try {
     console.log(event);
 
-    const cookies = event.cookies.join(";");
+    const cookies = event.cookies?.join(";") || "";
     const refreshToken = getCookieValue(cookies, "sp-refresh");
 
     if (refreshToken) {

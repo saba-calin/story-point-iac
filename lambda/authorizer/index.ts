@@ -1,6 +1,7 @@
 import {getCookieValue, getSecret, UserContext} from "../util";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
 import * as jwt from "jsonwebtoken";
+import {ROLE_MAP} from "./util/EnpointRoleMap";
 
 const secretsClient = new SecretsManagerClient({});
 
@@ -33,6 +34,12 @@ export async function handler(event: any, context: any, callback: any) {
         console.warn("JWT token invalid: ", error.message);
       }
 
+      callback("Unauthorized", null);
+    }
+
+    const routeKey = event.requestContext.routeKey;
+    const allowedRoles = ROLE_MAP[routeKey];
+    if (!allowedRoles || !allowedRoles.includes(payload!.role)) {
       callback("Unauthorized", null);
     }
 

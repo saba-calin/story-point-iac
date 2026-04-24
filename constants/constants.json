@@ -17,5 +17,6 @@
   "refresh_token_expiry_days": 30,
   "password_salt_rounds": 10,
   "rooms_page_size": 10,
+  "users_page_size": 10,
   "max_image_size_bytes": 1
 }

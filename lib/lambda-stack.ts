@@ -58,7 +58,9 @@ export class LambdaStack extends cdk.Stack {
     this.deployWsRevoteLambda(constants, roomsTable, storiesTable, votesTable, webSocketConnectionsTable);
 
     this.deployCreateRoomLambda(constants, roomsTable);
-    this.deployGetRoomLambda(constants, roomParticipantsTable);
+    this.deployGetRoomLambda(constants, roomsTable, roomParticipantsTable);
+    this.deployGetUserLambda(constants, usersTable);
+    this.deployBanUserLambda(constants, usersTable, refreshTokensTable);
     this.deployGetStoryLambda(constants, storiesTable);
     this.deployGetVoteLambda(constants, storiesTable, votesTable);
     this.deployAiEstimateLambda(constants, openAiKeySecretArn, openAiKeySecret);
@@ -423,6 +425,7 @@ export class LambdaStack extends cdk.Stack {
 
   private deployGetRoomLambda(
     constants: Constants,
+    roomsTable: dynamodb.TableV2,
     roomParticipantsTable: dynamodb.TableV2
   ) {
     const logGroup = this.createLambdaFunctionLogGroup('get-room');
@@ -437,6 +440,7 @@ export class LambdaStack extends cdk.Stack {
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
       environment: {
+        ROOMS_TABLE: roomsTable.tableName,
         ROOM_PARTICIPANTS_TABLE: roomParticipantsTable.tableName,
         ROOM_PARTICIPANTS_TABLE_INDEX: constants.room_participants_table_index_name,
 
@@ -444,7 +448,59 @@ export class LambdaStack extends cdk.Stack {
       }
     });
 
+    roomsTable.grantReadData(getRoomLambda);
     roomParticipantsTable.grantReadWriteData(getRoomLambda);
+  }
+
+  private deployGetUserLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('get-user');
+
+    const getUserLambda = new lambda.Function(this, 'GetUserLambda', {
+      functionName: 'get-user_lambda',
+      description: 'Lambda function that is used only the admin to fetch all users',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/get-user/dist/get-user'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        USERS_PAGE_SIZE: String(constants.users_page_size)
+      }
+    });
+
+    usersTable.grantReadData(getUserLambda);
+  }
+
+  private deployBanUserLambda(
+    constants: Constants,
+    usersTable: dynamodb.TableV2,
+    refreshTokensTable: dynamodb.TableV2
+  ) {
+    const logGroup = this.createLambdaFunctionLogGroup('ban-user');
+
+    const banUserLambda = new lambda.Function(this, 'BanUserLambda', {
+      functionName: 'ban-user_lambda',
+      description: 'Lambda function that is used only the admin to ban a user',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/ban-user/dist/ban-user'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup,
+      environment: {
+        USERS_TABLE: usersTable.tableName,
+        REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
+        REFRESH_TOKENS_TABLE_INDEX: constants.refresh_tokens_table_index_name
+      }
+    });
+
+    usersTable.grantReadWriteData(banUserLambda);
+    refreshTokensTable.grantReadWriteData(banUserLambda);
   }
 
   private deployGetStoryLambda(

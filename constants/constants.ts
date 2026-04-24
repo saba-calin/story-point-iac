@@ -18,6 +18,7 @@ export class Constants {
   public readonly refresh_token_expiry_days: number;
   public readonly password_salt_rounds: number;
   public readonly rooms_page_size: number;
+  public readonly users_page_size: number;
   public readonly max_image_size_bytes: number;
 
   constructor(constantsFile: any) {
@@ -39,6 +40,7 @@ export class Constants {
     this.refresh_token_expiry_days = constantsFile.refresh_token_expiry_days;
     this.password_salt_rounds = constantsFile.password_salt_rounds;
     this.rooms_page_size = constantsFile.rooms_page_size;
+    this.users_page_size = constantsFile.users_page_size;
     this.max_image_size_bytes = constantsFile.max_image_size_bytes;
   }
 }

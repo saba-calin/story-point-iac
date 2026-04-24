@@ -48,7 +48,15 @@ export async function handler(event: any) {
     if (!userResult.Item) {
       return generateErrorResponse(401, "User not found");
     }
+
     const user = userResult.Item as UserQueryResponse;
+    if (user.isBanned) {
+      await docClient.send(new DeleteCommand({
+        TableName: REFRESH_TOKENS_TABLE,
+        Key: {refreshTokenHash: oldRefreshTokenHash}
+      }));
+      return generateErrorResponse(401, "Account is banned");
+    }
 
     cachedJwtSecret = await getSecret(cachedJwtSecret, JWT_SECRET_ARN, secretsClient);
     const accessTokenDuration = 60 * ACCESS_TOKEN_EXPIRY_MINUTES;
@@ -57,7 +65,8 @@ export async function handler(event: any) {
         username: user.username,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
+        role: user.role
       },
       cachedJwtSecret,
       {
@@ -95,9 +104,10 @@ export async function handler(event: any) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          role: user.role,
           accessTokenDuration: accessTokenDuration,
-          profilePictureKey: user.profilePictureKey,
-          ...((user.jiraBaseUrl && user.jiraEmail && user.jiraToken && user.storyPointsFieldId) && {hasJiraAccess: true})
+          profilePictureKey: user.profilePictureKey ?? null,
+          hasJiraAccess: (user.jiraBaseUrl && user.jiraEmail && user.jiraToken && user.storyPointsFieldId) ? true : null
         }
       }),
       headers: {

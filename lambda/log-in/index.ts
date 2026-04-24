@@ -42,6 +42,9 @@ export async function handler(event: any) {
     }
 
     const user = result.Item as UserQueryResponse;
+    if (user.isBanned) {
+      return generateErrorResponse(400, "Account is banned");
+    }
 
     const passwordMatches = await bcrypt.compare(logInRequest.password, user.password);
     if (!passwordMatches) {
@@ -55,7 +58,8 @@ export async function handler(event: any) {
         username: user.username,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
+        role: user.role
       },
       cachedJwtSecret,
       {
@@ -88,9 +92,10 @@ export async function handler(event: any) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          role: user.role,
           accessTokenDuration: accessTokenDuration,
-          profilePictureKey: user.profilePictureKey,
-          ...((user.jiraBaseUrl && user.jiraEmail && user.jiraToken && user.storyPointsFieldId) && {hasJiraAccess: true})
+          profilePictureKey: user.profilePictureKey ?? null,
+          hasJiraAccess: (user.jiraBaseUrl && user.jiraEmail && user.jiraToken && user.storyPointsFieldId) ? true : null
         }
       }),
       headers: {

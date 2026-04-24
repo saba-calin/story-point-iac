@@ -2,7 +2,7 @@ import {SignUpRequest} from "./util/SignUpRequest";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, PutCommand, TransactWriteCommand} from "@aws-sdk/lib-dynamodb";
 import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
-import {generateErrorResponse, getSecret} from "../util";
+import {generateErrorResponse, getSecret, UserRole} from "../util";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import {createHash, randomBytes} from "node:crypto";
@@ -51,6 +51,7 @@ export async function handler(event: any) {
       firstName: signUpRequest.firstName,
       lastName: signUpRequest.lastName,
       password: hashedPassword,
+      role: UserRole.USER
     };
     const emailRecord = {
       email: signUpRequest.email,
@@ -84,7 +85,8 @@ export async function handler(event: any) {
         username: userRecord.username,
         email: userRecord.email,
         firstName: userRecord.firstName,
-        lastName: userRecord.lastName
+        lastName: userRecord.lastName,
+        role: userRecord.role
       },
       cachedJwtSecret,
       {
@@ -117,6 +119,7 @@ export async function handler(event: any) {
           email: userRecord.email,
           firstName: userRecord.firstName,
           lastName: userRecord.lastName,
+          role: userRecord.role,
           accessTokenDuration: accessTokenDuration,
           profilePictureKey: null,
           hasJiraAccess: null

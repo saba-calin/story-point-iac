@@ -159,6 +159,22 @@ export class ApiGatewayStack extends cdk.Stack {
       authorizer: authorizer
     });
 
+    const getUserLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('GetUserLambdaIntegration', lambda.Function.fromFunctionName(this, 'GetUserLambda', 'get-user_lambda'));
+    httpApi.addRoutes({
+      path: '/users',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: getUserLambdaIntegration,
+      authorizer: authorizer
+    });
+
+    const banUserLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('BanUserLambdaIntegration', lambda.Function.fromFunctionName(this, 'BanUserLambda', 'ban-user_lambda'));
+    httpApi.addRoutes({
+      path: '/users/ban',
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: banUserLambdaIntegration,
+      authorizer: authorizer
+    });
+
     const aiEstimateLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('AiEstimateLambdaIntegration', lambda.Function.fromFunctionName(this, 'AiEstimateLambda', 'ai-estimate_lambda'));
     httpApi.addRoutes({
       path: '/story/ai-estimate',

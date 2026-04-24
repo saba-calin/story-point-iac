@@ -10,6 +10,7 @@ export interface UserContext {
   email: string;
   firstName: string;
   lastName: string;
+  role: UserRole;
 }
 
 export interface UserQueryResponse {
@@ -18,6 +19,8 @@ export interface UserQueryResponse {
   username: string;
   email: string;
   password: string;
+  role: UserRole;
+  isBanned: boolean;
   profilePictureKey: string;
   jiraToken: string;
   jiraBaseUrl: string;
@@ -76,6 +79,11 @@ export interface ConnectionQueryResponse {
   roomId: string,
   username: string,
   profilePictureKey: string
+}
+
+export enum UserRole {
+  USER = "user",
+  ADMIN = "admin"
 }
 
 export function generateErrorResponse(statusCode: number, message: string) {

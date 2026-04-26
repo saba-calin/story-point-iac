@@ -5,6 +5,8 @@ import {
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
 import {ApiGatewayManagementApiClient} from "@aws-sdk/client-apigatewaymanagementapi";
+import {NodeHttpHandler} from "@smithy/node-http-handler";
+import {Agent} from "https";
 import {VoteRequest} from "./util/VoteRequest";
 
 const dynamoClient = new DynamoDBClient({});
@@ -18,16 +20,23 @@ const WS_CONNECTIONS_TABLE = process.env.WS_CONNECTIONS_TABLE!;
 
 const WS_CONNECTIONS_TABLE_INDEX = process.env.WS_CONNECTIONS_TABLE_INDEX!;
 
+const httpsAgent = new Agent({keepAlive: true, maxSockets: Infinity});
+let apiGwClient: ApiGatewayManagementApiClient;
+
 export async function handler(event: any) {
   try {
-    console.log(event);
+    // console.log(event);
     const {connectionId, domainName} = event.requestContext;
     const userContext = event.requestContext.authorizer as UserContext;
     const voteRequest = JSON.parse(event.body) as VoteRequest;
 
-    const client = new ApiGatewayManagementApiClient({
-      endpoint: `https://${domainName}`
-    });
+    if (!apiGwClient) {
+      apiGwClient = new ApiGatewayManagementApiClient({
+        endpoint: `https://${domainName}`,
+        requestHandler: new NodeHttpHandler({httpsAgent})
+      });
+    }
+    const client = apiGwClient;
 
     if (!VALID_VOTES.includes(voteRequest.voteValue)) {
       await sendErrorMessageToConnection(connectionId, `Invalid vote value`, client);
@@ -115,7 +124,7 @@ export async function handler(event: any) {
     }));
     const connections = connectionsResult.Items?.map(c => c.connectionId) ?? [];
 
-    await Promise.all(
+    await Promise.allSettled(
       connections.map(connectionId => sendToConnection(connectionId, client, {
         action: "playerVoted",
         vote: {

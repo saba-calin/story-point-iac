@@ -11,6 +11,8 @@ import {
   UserContext, VoteQueryResponse
 } from "../util";
 import {ApiGatewayManagementApiClient} from "@aws-sdk/client-apigatewaymanagementapi";
+import {NodeHttpHandler} from "@smithy/node-http-handler";
+import {Agent} from "https";
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand} from "@aws-sdk/lib-dynamodb";
 
@@ -25,16 +27,23 @@ const VOTES_TABLE = process.env.VOTES_TABLE!;
 
 const WS_CONNECTIONS_TABLE_INDEX = process.env.WS_CONNECTIONS_TABLE_INDEX!;
 
+const httpsAgent = new Agent({keepAlive: true, maxSockets: Infinity});
+let apiGwClient: ApiGatewayManagementApiClient;
+
 export async function handler(event: any) {
   try {
-    console.log(event);
+    // console.log(event);
     const {connectionId, domainName} = event.requestContext;
     const userContext = event.requestContext.authorizer as UserContext;
     const joinRoomRequest = JSON.parse(event.body) as JoinRoomRequest;
 
-    const client = new ApiGatewayManagementApiClient({
-      endpoint: `https://${domainName}`
-    });
+    if (!apiGwClient) {
+      apiGwClient = new ApiGatewayManagementApiClient({
+        endpoint: `https://${domainName}`,
+        requestHandler: new NodeHttpHandler({httpsAgent})
+      });
+    }
+    const client = apiGwClient;
 
     if (!joinRoomRequest.roomId) {
       await sendErrorMessageToConnection(connectionId, "Missing room id", client);
@@ -142,7 +151,7 @@ export async function handler(event: any) {
       votes: votes.map(vote => vote.username === userContext.username ? vote : {...vote, voteValue: null})
     });
 
-    await Promise.all(
+    await Promise.allSettled(
       connections
         .filter(c => c.connectionId !== connectionId)
         .map(c => sendToConnection(c.connectionId, client, {

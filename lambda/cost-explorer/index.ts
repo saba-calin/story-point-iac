@@ -11,10 +11,11 @@ const client = new CostExplorerClient({ region: "us-east-1" });
 
 function getDateRange() {
   const end = new Date();
-  end.setDate(1);
+  end.setDate(end.getDate() + 1);
 
-  const start = new Date(end);
-  start.setMonth(start.getMonth() - 6);
+  const start = new Date();
+  start.setDate(1);
+  start.setMonth(start.getMonth() - 5);
 
   return {
     start: start.toISOString().split("T")[0],
@@ -37,7 +38,15 @@ export async function handler(event: any) {
       GroupBy: [{
         Type: GroupDefinitionType.DIMENSION,
         Key: "SERVICE"
-      }]
+      }],
+      Filter: {
+        Not: {
+          Dimensions: {
+            Key: "RECORD_TYPE",
+            Values: ["Credit", "Refund"]
+          }
+        }
+      }
     };
 
     const response = await client.send(new GetCostAndUsageCommand(input));

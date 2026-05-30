@@ -1,5 +1,5 @@
 import * as cdk from "aws-cdk-lib/core";
-import {RemovalPolicy} from "aws-cdk-lib/core";
+import {Duration, RemovalPolicy} from "aws-cdk-lib/core";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
@@ -89,7 +89,8 @@ export class LambdaStack extends cdk.Stack {
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/test/dist/test'),
       memorySize: constants.lambda_memory_size,
-      logGroup: logGroup
+      logGroup: logGroup,
+      timeout: Duration.seconds(10)
     });
   }
 
@@ -104,7 +105,8 @@ export class LambdaStack extends cdk.Stack {
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/ws-test/dist/ws-test'),
       memorySize: constants.lambda_memory_size,
-      logGroup: logGroup
+      logGroup: logGroup,
+      timeout: Duration.seconds(10)
     });
 
     wsTestLambda.addToRolePolicy(new iam.PolicyStatement({
@@ -132,6 +134,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-join-room/dist/ws-join-room'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
@@ -172,6 +175,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-create-story/dist/ws-create-story'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
@@ -209,6 +213,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-set-active-story/dist/ws-set-active-story'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
@@ -249,6 +254,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-vote/dist/ws-vote'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
@@ -292,6 +298,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-reveal/dist/ws-reveal'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         ROOMS_TABLE: roomsTable.tableName,
@@ -335,6 +342,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-revote/dist/ws-revote'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         STORIES_TABLE: storiesTable.tableName,
@@ -368,7 +376,8 @@ export class LambdaStack extends cdk.Stack {
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/ws-connect/dist/ws-connect'),
       memorySize: constants.lambda_memory_size,
-      logGroup: logGroup
+      logGroup: logGroup,
+      timeout: Duration.seconds(10)
     });
   }
 
@@ -387,6 +396,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ws-disconnect/dist/ws-disconnect'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         WS_CONNECTIONS_TABLE: webSocketConnectionsTable.tableName,
         WS_CONNECTIONS_TABLE_INDEX: constants.ws_connections_table_index_name
@@ -416,6 +426,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/create-room/dist/create-room'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName
       }
@@ -440,6 +451,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-room/dist/get-room'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         ROOMS_TABLE: roomsTable.tableName,
         ROOM_PARTICIPANTS_TABLE: roomParticipantsTable.tableName,
@@ -464,7 +476,8 @@ export class LambdaStack extends cdk.Stack {
       handler: 'index.handler',
       code: lambda.Code.fromAsset('lambda/cost-explorer/dist/cost-explorer'),
       memorySize: constants.lambda_memory_size,
-      logGroup: logGroup
+      logGroup: logGroup,
+      timeout: Duration.seconds(10)
     });
 
     costExplorerLambda.addToRolePolicy(new iam.PolicyStatement({
@@ -488,6 +501,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-user/dist/get-user'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         USERS_PAGE_SIZE: String(constants.users_page_size)
@@ -513,6 +527,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ban-user/dist/ban-user'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
@@ -539,6 +554,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-story/dist/get-story'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         STORIES_TABLE: storiesTable.tableName,
       }
@@ -563,6 +579,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-vote/dist/get-vote'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         STORIES_TABLE: storiesTable.tableName,
         VOTES_TABLE: votesTable.tableName
@@ -589,6 +606,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-avatar-upload-url/dist/get-avatar-upload-url'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         MAX_IMAGE_SIZE_BYTES: String(constants.max_image_size_bytes),
@@ -616,6 +634,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/ai-estimate/dist/ai-estimate'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         OPEN_AI_SECRET_KEY_ARN: openAiKeySecretArn
       }
@@ -640,6 +659,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/save-jira-token/dist/save-jira-token'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         KMS_KEY_ID: jiraTokenKey.keyId
@@ -666,6 +686,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-jira-projects/dist/get-jira-projects'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName
       }
@@ -691,6 +712,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/get-jira-stories/dist/get-jira-stories'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName
       }
@@ -715,6 +737,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/change-password/dist/change-password'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         PASSWORD_SALT_ROUNDS: String(constants.password_salt_rounds)
@@ -739,6 +762,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/auth-me/dist/auth-me'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName
       }
@@ -763,6 +787,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/authorizer/dist/authorizer'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         JWT_SECRET_ARN: jwtSecretArn,
       }
@@ -789,6 +814,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/log-in/dist/log-in'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
@@ -819,6 +845,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/log-out/dist/log-out'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
         ROOT_DOMAIN: constants.root_domain_name
@@ -847,6 +874,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/sign-up/dist/sign-up'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         USERS_TABLE: usersTable.tableName,
         USER_EMAILS_TABLE: userEmailsTable.tableName,
@@ -883,6 +911,7 @@ export class LambdaStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/refresh/dist/refresh'),
       memorySize: constants.lambda_memory_size,
       logGroup: logGroup,
+      timeout: Duration.seconds(10),
       environment: {
         REFRESH_TOKENS_TABLE: refreshTokensTable.tableName,
         USERS_TABLE: usersTable.tableName,

@@ -233,7 +233,7 @@ export class ApiGatewayStack extends cdk.Stack {
 
     const costExplorerLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('CostExplorerLambdaIntegration', lambda.Function.fromFunctionName(this, 'CostExplorerLambda', 'cost-explorer_lambda'));
     httpApi.addRoutes({
-      path: '/cost-explorer',
+      path: '/admin/cost-explorer',
       methods: [apigwv2.HttpMethod.GET],
       integration: costExplorerLambdaIntegration,
       authorizer: authorizer

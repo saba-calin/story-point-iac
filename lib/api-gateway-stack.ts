@@ -231,6 +231,14 @@ export class ApiGatewayStack extends cdk.Stack {
       authorizer: authorizer
     });
 
+    const costExplorerLambdaIntegration = new apigwv2Integrations.HttpLambdaIntegration('CostExplorerLambdaIntegration', lambda.Function.fromFunctionName(this, 'CostExplorerLambda', 'cost-explorer_lambda'));
+    httpApi.addRoutes({
+      path: '/cost-explorer',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: costExplorerLambdaIntegration,
+      authorizer: authorizer
+    });
+
     const cfnAuthorizer = httpApi.node.findChild('LambdaAuthorizer').node.defaultChild as apigwv2.CfnAuthorizer;
     cfnAuthorizer.authorizerPayloadFormatVersion = '2.0';
     cfnAuthorizer.enableSimpleResponses = false;

@@ -67,6 +67,7 @@ export class LambdaStack extends cdk.Stack {
     this.deploySaveJiraTokenLambda(constants, usersTable, jiraTokenKey);
     this.deployGetJiraProjectsLambda(constants, usersTable, jiraTokenKey);
     this.deployGetJiraStoriesLambda(constants, usersTable, jiraTokenKey);
+    this.deployCostExplorerLambda(constants);
 
     this.deployChangePasswordLambda(constants, usersTable);
     this.deployAuthMeLambda(constants, usersTable);
@@ -450,6 +451,26 @@ export class LambdaStack extends cdk.Stack {
 
     roomsTable.grantReadData(getRoomLambda);
     roomParticipantsTable.grantReadWriteData(getRoomLambda);
+  }
+
+  private deployCostExplorerLambda(constants: Constants) {
+    const logGroup = this.createLambdaFunctionLogGroup('cost-explorer');
+
+    const costExplorerLambda = new lambda.Function(this, 'CostExplorerLambda', {
+      functionName: 'cost-explorer_lambda',
+      description: 'Lambda function that is used only the admin to retrieve the costs for the last 6 months',
+      architecture: lambda.Architecture.ARM_64,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/cost-explorer/dist/cost-explorer'),
+      memorySize: constants.lambda_memory_size,
+      logGroup: logGroup
+    });
+
+    costExplorerLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ce:GetCostAndUsage'],
+      resources: ['*']
+    }));
   }
 
   private deployGetUserLambda(

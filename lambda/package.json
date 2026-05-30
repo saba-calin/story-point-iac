@@ -22,6 +22,7 @@
     "get-jira-projects",
     "get-jira-stories",
     "ai-estimate",
+    "cost-explorer",
     "ws-connect",
     "ws-disconnect",
     "ws-join-room",
@@ -43,6 +44,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.990.0",
+    "@aws-sdk/client-cost-explorer": "^3.1057.0",
     "@aws-sdk/client-dynamodb": "^3.985.0",
     "@aws-sdk/client-kms": "^3.1009.0",
     "@aws-sdk/client-s3": "^3.1004.0",

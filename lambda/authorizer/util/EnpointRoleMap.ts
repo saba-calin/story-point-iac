@@ -14,7 +14,7 @@ export const ROLE_MAP: Record<string, string[]> = {
   "GET /users/me/avatar/upload-url": [UserRole.USER, UserRole.ADMIN],
   "PUT /users/jira-token": [UserRole.USER],
   "PUT /users/ban": [UserRole.ADMIN],
-  "GET /cost-explorer": [UserRole.ADMIN],
+  "GET /admin/cost-explorer": [UserRole.ADMIN],
 
   "$connect": [UserRole.USER]
 }
